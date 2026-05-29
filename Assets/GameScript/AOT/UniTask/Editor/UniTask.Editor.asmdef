@@ -1,0 +1,19 @@
+{
+    "name": "UniTask.Editor",
+    "references": [
+        "UniTask",
+        "FairyGUI",
+        "spine-unity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1334,750" initName="frame" designImageAlpha="30">
+  <displayList>
+    <graph id="n193_b51m" name="bg" xy="1334,750" pivot="1,1" anchor="true" size="1334,750" type="rect" fillColor="#ffcccccc">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <component id="n7_xbay" name="closeButton" src="tv1v1a" fileName="components/com_btn_close.xml" pkg="2r331opv" xy="0,0"/>
+    <loader id="n99_t16b" name="iconBg" xy="50,60" size="1020,680" alpha="0.1" url="ui://791wrm7st16be" align="center" vAlign="middle">
+      <relation target="" sidePair="left-left,top-top"/>
+    </loader>
+    <graph id="n212_g4ca" name="iconRect" xy="49,59" size="1024,684" type="rect" lineSize="2" lineColor="#ff00ff00" fillColor="#00ffffff">
+      <relation target="n99_t16b" sidePair="left-left,top-top"/>
+    </graph>
+    <component id="n168_t16b" name="110" src="jo4c1ygcgad" fileName="components/Item_Puzzle_TL.xml" xy="50,60" group="n192_t16b"/>
+    <component id="n169_t16b" name="111" src="jo4c1ygcgaf" fileName="components/Item_Puzzle_T1.xml" xy="220,60" group="n192_t16b"/>
+    <component id="n170_t16b" name="112" src="jo4c1ygcgag" fileName="components/Item_Puzzle_T2.xml" xy="390,60" group="n192_t16b"/>
+    <component id="n171_t16b" name="113" src="jo4c1ygcgaf" fileName="components/Item_Puzzle_T1.xml" xy="560,60" group="n192_t16b"/>
+    <component id="n172_t16b" name="114" src="jo4c1ygcgag" fileName="components/Item_Puzzle_T2.xml" xy="730,60" group="n192_t16b"/>
+    <component id="n173_t16b" name="115" src="jo4c1ygcgah" fileName="components/Item_Puzzle_TR.xml" xy="1150,95" group="n192_t16b"/>
+    <component id="n194_l4pl" name="120" src="l4pl1ygcgam" fileName="components/Item_Puzzle_L1.xml" xy="49,230" group="n192_t16b"/>
+    <component id="n195_l4pl" name="121" src="l4pl1ygcgaq" fileName="components/Item_Puzzle_C1.xml" xy="219,230" group="n192_t16b"/>
+    <component id="n196_l4pl" name="122" src="l4pl1ygcgar" fileName="components/Item_Puzzle_C2.xml" xy="389,230" group="n192_t16b"/>
+    <component id="n197_l4pl" name="123" src="l4pl1ygcgaq" fileName="components/Item_Puzzle_C1.xml" xy="559,230" group="n192_t16b"/>
+    <component id="n198_l4pl" name="124" src="l4pl1ygcgar" fileName="components/Item_Puzzle_C2.xml" xy="729,230" group="n192_t16b"/>
+    <component id="n199_l4pl" name="125" src="l4pl1ygcgao" fileName="components/Item_Puzzle_R1.xml" xy="899,230" group="n192_t16b"/>
+    <component id="n206_l4pl" name="130" src="l4pl1ygcgan" fileName="components/Item_Puzzle_L2.xml" xy="50,400" group="n192_t16b"/>
+    <component id="n207_l4pl" name="131" src="l4pl1ygcgar" fileName="components/Item_Puzzle_C2.xml" xy="220,400" group="n192_t16b"/>
+    <component id="n208_l4pl" name="132" src="l4pl1ygcgaq" fileName="components/Item_Puzzle_C1.xml" xy="390,400" group="n192_t16b"/>
+    <component id="n209_l4pl" name="133" src="l4pl1ygcgar" fileName="components/Item_Puzzle_C2.xml" xy="560,400" group="n192_t16b"/>
+    <component id="n210_l4pl" name="134" src="l4pl1ygcgaq" fileName="components/Item_Puzzle_C1.xml" xy="730,400" group="n192_t16b"/>
+    <component id="n211_l4pl" name="135" src="l4pl1ygcgap" fileName="components/Item_Puzzle_R2.xml" xy="900,400" group="n192_t16b"/>
+    <component id="n200_l4pl" name="140" src="l4pl1ygcgai" fileName="components/Item_Puzzle_BL.xml" xy="50,570" group="n192_t16b"/>
+    <component id="n201_l4pl" name="141" src="l4pl1ygcgak" fileName="components/Item_Puzzle_B1.xml" xy="220,570" group="n192_t16b"/>
+    <component id="n202_l4pl" name="142" src="l4pl1ygcgal" fileName="components/Item_Puzzle_B2.xml" xy="390,570" group="n192_t16b"/>
+    <component id="n203_l4pl" name="143" src="l4pl1ygcgak" fileName="components/Item_Puzzle_B1.xml" xy="560,570" group="n192_t16b"/>
+    <component id="n204_l4pl" name="144" src="l4pl1ygcgal" fileName="components/Item_Puzzle_B2.xml" xy="730,570" group="n192_t16b"/>
+    <component id="n205_l4pl" name="145" src="l4pl1ygcgaj" fileName="components/Item_Puzzle_BR.xml" xy="900,570" group="n192_t16b"/>
+    <group id="n192_t16b" name="frontTop" xy="49,60" size="1271,680" advanced="true">
+      <relation target="n99_t16b" sidePair="left-left,top-top"/>
+    </group>
+    <text id="n213_ijm7" name="yesTxt" xy="169,13" size="205,46" fontSize="30" vAlign="middle" autoSize="none" bold="true" text="已完成:0"/>
+    <component id="n216_ijm7" name="nextBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="407,6" size="135,44">
+      <Button title="完成下一个" titleFontSize="23"/>
+    </component>
+    <component id="n215_ijm7" name="finishBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="617,6" size="135,44">
+      <Button title="GM全完成" titleFontSize="24"/>
+    </component>
+  </displayList>
+</component>

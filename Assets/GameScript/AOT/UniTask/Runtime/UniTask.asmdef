@@ -1,0 +1,48 @@
+{
+    "name": "UniTask",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1182dffdca5b12d47a7f79c3ce3e21c5",
+        "GUID:68765d262e2128e4ab49c983f3411946"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.modules.assetbundle",
+            "expression": "",
+            "define": "UNITASK_ASSETBUNDLE_SUPPORT"
+        },
+        {
+            "name": "com.unity.modules.physics",
+            "expression": "",
+            "define": "UNITASK_PHYSICS_SUPPORT"
+        },
+        {
+            "name": "com.unity.modules.physics2d",
+            "expression": "",
+            "define": "UNITASK_PHYSICS2D_SUPPORT"
+        },
+        {
+            "name": "com.unity.modules.particlesystem",
+            "expression": "",
+            "define": "UNITASK_PARTICLESYSTEM_SUPPORT"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "",
+            "define": "UNITASK_UGUI_SUPPORT"
+        },
+        {
+            "name": "com.unity.modules.unitywebrequest",
+            "expression": "",
+            "define": "UNITASK_WEBREQUEST_SUPPORT"
+        }
+    ],
+    "noEngineReferences": false
+}

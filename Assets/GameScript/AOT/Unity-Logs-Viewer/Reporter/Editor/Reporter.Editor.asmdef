@@ -1,0 +1,27 @@
+{
+    "name": "Reporter.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f1c21bcef4ae5914bba2dad3d13fa8e5",
+        "GUID:3efbc8aa154f4cf40882eb0d11aa3ad2",
+        "GUID:9069ac25d95ca17448a247f3bb1c769f",
+        "GUID:1182dffdca5b12d47a7f79c3ce3e21c5",
+        "GUID:7b5c1afe392846b4184a605688f09cf6",
+        "GUID:13ba8ce62aa80c74598530029cb2d649",
+        "GUID:68765d262e2128e4ab49c983f3411946",
+        "GUID:c55575a9f1747c240822f4b7e0400716",
+        "GUID:1ea6b676786131e4095182b742bb64ec",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

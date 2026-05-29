@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="utp01xia" hasFavorites="true">
+  <resources>
+    <component id="m79t2l" name="DialogTip1View.xml" path="/panel/" exported="true"/>
+    <component id="m79t16" name="DialogTip2View.xml" path="/panel/" exported="true"/>
+    <component id="tbod38" name="contentTxt.xml" path="/components/" exported="true"/>
+    <component id="ykwwkw" name="useProp_Slider4.xml" path="/components/" exported="true"/>
+    <component id="ldbz1iy5bbp" name="tipsAttItem.xml" path="/components/" exported="true"/>
+    <component id="10xg71iy5bbt" name="GetWayItemTemp.xml" path="/components/" exported="true"/>
+    <component id="t2qk1iy5bbq" name="getPbr.xml" path="/components/" exported="true"/>
+    <component id="t6g91ygcfhr" name="currencyItem.xml" path="/components/" exported="true"/>
+    <component id="g17g1ygcfi2" name="Item1.xml" path="/components/" exported="true"/>
+    <component id="pxy31ygcfmu" name="posItem.xml" path="/components/" exported="true"/>
+    <font id="ml181ygcfmy" name="gold_font.fnt" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfmz" name="0.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn0" name="1.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn1" name="2.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn2" name="3.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn3" name="4.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn4" name="5.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn5" name="6.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn6" name="7.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn7" name="8.png" path="/img_font/" exported="true"/>
+    <image id="ml181ygcfn8" name="9.png" path="/img_font/" exported="true"/>
+    <component id="ff111ygcft0" name="RebirthItem2.xml" path="/components/" exported="true"/>
+    <component id="ff111ygcft1" name="RebirthItem1.xml" path="/components/" exported="true"/>
+    <component id="ff111ygcft2" name="contentTxt2.xml" path="/components/" exported="true"/>
+    <component id="ff111ygcft3" name="contentTxt3.xml" path="/components/" exported="true"/>
+    <component id="kxkw1ygcft1" name="Items_name.xml" path="/components/" exported="true"/>
+    <component id="r1zh1ygcft0" name="rankItem_world.xml" path="/components/" exported="true"/>
+    <component id="di051ygcft0" name="rankItem1_lea.xml" path="/components/" exported="true"/>
+    <component id="9v8f1ygcftc" name="RebirthItem3.xml" path="/components/" exported="true"/>
+    <image id="sxlp1ygcg9n" name="main_bg04.png" path="/img_font/" favorite="true" scale="9grid" scale9grid="8,8,5,4"/>
+  </resources>
+  <publish name="" genCode="true"/>
+</packageDescription>

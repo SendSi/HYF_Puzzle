@@ -27,7 +27,7 @@ public class FGUILoader : Singleton<FGUILoader>
         {
             mCurTimeNum += 1;
             CheckTimeReleasePKG();
-            CheckTimeReleaseSpine();
+            // CheckTimeReleaseSpine();
         });
     }
 

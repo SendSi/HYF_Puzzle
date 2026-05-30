@@ -131,19 +131,6 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-    - GroupName: map
-      GroupDesc: "\u5730\u56FE"
-      AssetTags: 
-      ActiveRuleName: EnableGroup
-      Collectors:
-      - CollectPath: Assets/GameRes/Map
-        CollectorGUID: 033245eee6890064eb4129f85586e949
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
     - GroupName: prefab
       GroupDesc: "\u9884\u7F6E\u7269 "
       AssetTags: 

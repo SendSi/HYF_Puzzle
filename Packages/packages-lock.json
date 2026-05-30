@@ -12,7 +12,14 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "de0348c453844f91d52e736be681f0713ae47201"
+      "hash": "061314200e2f03307c4d90b448e1de7b85431905"
+    },
+    "com.qq.weixin.minigame": {
+      "version": "https://gitee.com/wechat-minigame/minigame-tuanjie-transform-sdk.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "1a7650350717484b7a732ed302df31832064517c"
     },
     "com.tuyoogame.yooasset": {
       "version": "2.1.0",

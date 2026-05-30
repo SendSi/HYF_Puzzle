@@ -2,6 +2,7 @@
   "dependencies": {
     "com.code-philosophy.hybridclr": "https://gitee.com/focus-creative-games/hybridclr_unity.git",
     "com.code-philosophy.luban": "https://github.com/focus-creative-games/luban_unity.git",
+    "com.qq.weixin.minigame": "https://gitee.com/wechat-minigame/minigame-tuanjie-transform-sdk.git",
     "com.tuyoogame.yooasset": "2.1.0",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",

@@ -5,7 +5,7 @@
       <relation target="" sidePair="width-width,height-height"/>
     </graph>
     <component id="n7_xbay" name="closeButton" src="tv1v1a" fileName="components/com_btn_close.xml" pkg="2r331opv" xy="0,0"/>
-    <loader id="n99_t16b" name="iconBg" xy="50,60" size="1020,680" alpha="0.1" url="ui://791wrm7st16be" align="center" vAlign="middle">
+    <loader id="n99_t16b" name="iconBg" xy="50,60" size="1020,680" alpha="0.25" url="ui://791wrm7st16be" align="center" vAlign="middle">
       <relation target="" sidePair="left-left,top-top"/>
     </loader>
     <graph id="n212_g4ca" name="iconRect" xy="49,59" size="1024,684" type="rect" lineSize="2" lineColor="#ff00ff00" fillColor="#00ffffff">
@@ -40,10 +40,10 @@
     </group>
     <text id="n213_ijm7" name="yesTxt" xy="169,13" size="205,46" fontSize="30" vAlign="middle" autoSize="none" bold="true" text="已完成:0"/>
     <component id="n216_ijm7" name="nextBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="407,6" size="135,44">
-      <Button title="完成下一个" titleFontSize="23"/>
+      <Button title="完成下一个" titleFontSize="23" sound="ui://2r331opvu9ouh1"/>
     </component>
     <component id="n215_ijm7" name="finishBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="617,6" size="135,44">
-      <Button title="GM全完成" titleFontSize="24"/>
+      <Button title="GM全完成" titleFontSize="24" sound="ui://2r331opvu9ouh1"/>
     </component>
   </displayList>
 </component>

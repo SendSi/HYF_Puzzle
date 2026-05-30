@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace PuzzlePKG
 {
+    // public enum 
+    
+    
     public partial class PuzzleMainView : GComponent
     {
         private List<PuzzleConfig> mPuzzleList;
@@ -19,7 +22,6 @@ namespace PuzzlePKG
             this._finishBtn.onClick.Set(OnClickFinishBtnGM);
             this._nextBtn.onClick.Set(OnClickNextBtn);
       
-            Debug.LogError(_bg.xy);
             var maxX = _bg.x - itemCellValue;
             var maxY = _bg.y - itemCellValue;
 
@@ -73,7 +75,7 @@ namespace PuzzlePKG
                     else
                     {
                         // 放错了，播放错误音效并抖动反馈
-                        PlayFairyGUISound("com_06");
+                        PlayFairyGUISound("com_07");
                         PlayShakeAnimation(btnGo);
                     }
                 });
@@ -217,7 +219,7 @@ namespace PuzzlePKG
             if (audioClip == null)
             {
                 // 如果没找到，尝试直接从默认包获取
-                audioClip = UIPackage.GetItemAssetByURL($"ui://CommonPkg/{soundName}") as NAudioClip;
+                audioClip = UIPackage.GetItemAssetByURL($"ui://CommonPKG/{soundName}") as NAudioClip;
             }
             if (audioClip != null && audioClip.nativeClip != null)
             {

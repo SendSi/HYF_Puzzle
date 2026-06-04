@@ -20,8 +20,14 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// }} 
 
 	// {{ AOT generic types
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<CfgLubanMgr.<InitAsync>d__3>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<CfgLubanMgr.<PreloadAllConfigFiles>d__4>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<HotFixReflex.<InitAsync>d__1>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<ResMgr.<LoadAssetAsync>d__0<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<ResMgr.<_LoadAssetAsync>d__1<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<CfgLubanMgr.<InitAsync>d__3>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<CfgLubanMgr.<PreloadAllConfigFiles>d__4>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<HotFixReflex.<InitAsync>d__1>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<ResMgr.<LoadAssetAsync>d__0<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<ResMgr.<_LoadAssetAsync>d__1<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>
@@ -133,6 +139,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,object>>
 	// Cysharp.Threading.Tasks.UniTask<byte>
 	// Cysharp.Threading.Tasks.UniTask<object>
+	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<Cysharp.Threading.Tasks.AsyncUnit>
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<object>
 	// EventOne<int>
 	// Singleton<object>
@@ -354,8 +361,14 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 
 	public void RefMethods()
 	{
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,CfgLubanMgr.<InitAsync>d__3>(Cysharp.Threading.Tasks.UniTask.Awaiter&,CfgLubanMgr.<InitAsync>d__3&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,CfgLubanMgr.<PreloadAllConfigFiles>d__4>(Cysharp.Threading.Tasks.UniTask.Awaiter&,CfgLubanMgr.<PreloadAllConfigFiles>d__4&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,HotFixReflex.<InitAsync>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter&,HotFixReflex.<InitAsync>d__1&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,ResMgr.<_LoadAssetAsync>d__1<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter&,ResMgr.<_LoadAssetAsync>d__1<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,ResMgr.<LoadAssetAsync>d__0<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,ResMgr.<LoadAssetAsync>d__0<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<CfgLubanMgr.<InitAsync>d__3>(CfgLubanMgr.<InitAsync>d__3&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<CfgLubanMgr.<PreloadAllConfigFiles>d__4>(CfgLubanMgr.<PreloadAllConfigFiles>d__4&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<HotFixReflex.<InitAsync>d__1>(HotFixReflex.<InitAsync>d__1&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<SceneBase.<Init>d__1>(SceneBase.<Init>d__1&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<ResMgr.<LoadAssetAsync>d__0<object>>(ResMgr.<LoadAssetAsync>d__0<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<ResMgr.<_LoadAssetAsync>d__1<object>>(ResMgr.<_LoadAssetAsync>d__1<object>&)
@@ -369,8 +382,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Collections.Generic.KeyValuePair<float,object> System.Linq.Enumerable.ElementAt<System.Collections.Generic.KeyValuePair<float,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<float,object>>,int)
 		// System.Collections.Generic.KeyValuePair<object,object> System.Linq.Enumerable.ElementAt<System.Collections.Generic.KeyValuePair<object,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>,int)
 		// int System.MemoryExtensions.IndexOf<ushort>(System.ReadOnlySpan<ushort>,ushort)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,GLoader3DExtensions.<SetLoadSpine>d__0>(Cysharp.Threading.Tasks.UniTask.Awaiter&,GLoader3DExtensions.<SetLoadSpine>d__0&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<GLoader3DExtensions.<SetLoadSpine>d__0>(GLoader3DExtensions.<SetLoadSpine>d__0&)
 		// ushort& System.Runtime.CompilerServices.Unsafe.Add<ushort>(ushort&,System.IntPtr)
 		// byte& System.Runtime.CompilerServices.Unsafe.As<ushort,byte>(ushort&)
 		// object& System.Runtime.CompilerServices.Unsafe.As<object,object>(object&)
@@ -386,8 +397,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// object UnityEngine.Object.FindObjectOfType<object>()
 		// object YooAsset.AssetHandle.GetAssetObject<object>()
 		// YooAsset.AssetHandle YooAsset.ResourcePackage.LoadAssetAsync<object>(string,uint)
-		// YooAsset.AssetHandle YooAsset.ResourcePackage.LoadAssetSync<object>(string)
 		// YooAsset.AssetHandle YooAsset.YooAssets.LoadAssetAsync<object>(string,uint)
-		// YooAsset.AssetHandle YooAsset.YooAssets.LoadAssetSync<object>(string)
 	}
 }

@@ -11,8 +11,17 @@ namespace FairyGUI
     {
         public static Dictionary<string, BaseFont> sFontFactory = new Dictionary<string, BaseFont>();
 
+#if UNITY_WEBGL
         /// <summary>
-        /// 
+        /// WebGL/微信小游戏平台：FGUI包内的TTF字体（如source_bold.ttf）通常不包含中文字符，
+        /// 当设置此字段后，所有通过 ui:// URL 加载的动态字体将被替换为此字体，
+        /// 确保中文正常显示。注意：BitmapFont（位图字体）不受影响。
+        /// </summary>
+        public static BaseFont cjkFallbackFont;
+#endif
+
+        /// <summary>
+        ///
         /// </summary>
         /// <param name="font"></param>
         /// <param name="alias"></param>
@@ -24,7 +33,7 @@ namespace FairyGUI
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="font"></param>
         static public void UnregisterFont(BaseFont font)
@@ -41,7 +50,7 @@ namespace FairyGUI
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -52,7 +61,15 @@ namespace FairyGUI
             {
                 font = UIPackage.GetItemAssetByURL(name) as BaseFont;
                 if (font != null)
+                {
+#if UNITY_WEBGL
+                    // 微信小游戏平台：FGUI包内的动态字体（TTF）可能不包含中文字符
+                    // 如果设置了CJK回退字体，用CJK字体替换动态字体以确保中文正常显示
+                    if (cjkFallbackFont != null && font is DynamicFont)
+                        return cjkFallbackFont;
+#endif
                     return font;
+                }
             }
 
             if (sFontFactory.TryGetValue(name, out font))

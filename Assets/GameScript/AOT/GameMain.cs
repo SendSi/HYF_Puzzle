@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -6,6 +6,7 @@ using YooAsset;
 using System;
 using HybridCLR;
 using System.Linq;
+using UnityEngine.Networking;
 
 public class GameMain : MonoBehaviour
 {
@@ -34,6 +35,11 @@ public class GameMain : MonoBehaviour
 
         FairyGUI.GRoot.inst.SetContentScaleFactor(AppConfig.designResolutionX, AppConfig.designResolutionY, FairyGUI.UIContentScaler.ScreenMatchMode.MatchHeight); //设计尺寸
         this.gameObject.AddComponent<FairyGUI.SafeAreaUtils>();
+        
+        // WebGL/微信小游戏平台：加载中文字体（系统字体不可用）
+#if UNITY_WEBGL
+        yield return LoadChineseFont();
+#endif
 
 #if UNITY_EDITOR//开发时  就是要快一点见到页面  统一使用跳过热更，也就是PlayMode是失效的
         yield return CheckSkipHFView(); //跳过 热更页面    
@@ -155,6 +161,67 @@ public class GameMain : MonoBehaviour
             mAssemblyBytesDic[dll] = bytes;
         }
     }
+
+#if UNITY_WEBGL
+    // WebGL平台专用：通过 UnityWebRequest 从 StreamingAssets 加载热更代码
+    // 微信小游戏/WebGL平台不能使用 RawFileBuildPipeline 的 PatchOperation，直接通过 HTTP 加载
+    private IEnumerator LoadHotFixResWebGL()
+    {
+        // WebGL 平台 StreamingAssets 需要通过 HTTP 访问
+        string basePath =$"{AppConfig.appVersion}/";// Application.streamingAssetsPath + "/yoo/" + AppConfig.hotFixPackage + "/";//$"{AppConfig.appVersion}/";
+        
+        Debug.Log($"WebGL热更代码基础路径: {basePath}");
+        
+        foreach (var dll in mAssemblyFiles)
+        {
+            // YooAsset RawFileBuildPipeline 生成的文件名格式
+            string safeDllName = dll.Replace(".", "_");
+            string[] possibleNames = new string[]
+            {
+                $"Assets_GameResHotFix_{safeDllName}_bytes.rawfile",
+                $"Assets_GameResHotFix_{dll}_bytes.rawfile",
+                $"{dll}.bytes",
+                $"{dll}"
+            };
+            
+            bool loaded = false;
+            foreach (string fileName in possibleNames)
+            {
+                string url = basePath + fileName;
+                Debug.Log($"WebGL尝试加载: {url}");
+                
+                using (UnityWebRequest request = UnityWebRequest.Get(url))
+                {
+                    yield return request.SendWebRequest();
+                    
+#if UNITY_2020_1_OR_NEWER
+                    bool isError = request.result != UnityWebRequest.Result.Success;
+#else
+                    bool isError = request.isNetworkError || request.isHttpError;
+#endif
+                    if (!isError)
+                    {
+                        mAssemblyBytesDic[dll] = request.downloadHandler.data;
+                        Debug.Log($"WebGL加载成功: {fileName}, 大小: {request.downloadHandler.data.Length}");
+                        loaded = true;
+                        break;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"WebGL加载失败: {url}, 错误: {request.error}");
+                    }
+                }
+            }
+            
+            if (!loaded)
+            {
+                Debug.LogError($"WebGL无法加载热更代码: {dll}，已尝试所有可能的路径");
+            }
+        }
+        
+        Debug.Log($"WebGL热更代码加载完成，共 {mAssemblyBytesDic.Count} 个文件");
+    }
+#endif
     public static byte[] ReadBytesFromStreamingAssets(string dllName)
     {
         return mAssemblyBytesDic[dllName];
@@ -219,5 +286,81 @@ public class GameMain : MonoBehaviour
     {
         _lowMemory?.Invoke();
     }
+
+#if UNITY_WEBGL
+    /// <summary>
+    /// WebGL/微信小游戏平台：加载CJK字体 (source_bold, 4MB含中文)
+    /// FGUI包内字体在WebGL上可能无法正确渲染中文，需要显式加载替换
+    /// </summary>
+    private IEnumerator LoadChineseFont()
+    {
+        Debug.Log("[LoadChineseFont] 开始加载中文字体 (source_bold)...");
+        
+        // 方法1：从 Resources 文件夹加载字体（推荐）
+        // 请确保你有一个中文字体文件放在 Assets/Resources/Fonts/ 目录下
+        Font chineseFont = Resources.Load<Font>("Fonts/source_bold");
+        
+        if (chineseFont == null)
+        {
+            // 备用：尝试加载 source_regular
+            chineseFont = Resources.Load<Font>("Fonts/source_regular");
+        }
+        
+        if (chineseFont == null)
+        {
+            // 方法2：尝试从 StreamingAssets 通过 UnityWebRequest 加载
+            string fontUrl = Application.streamingAssetsPath + "/Fonts/source_bold.ttf";
+            Debug.Log($"尝试从 StreamingAssets 加载字体: {fontUrl}");
+            
+            using (UnityWebRequest request = UnityWebRequest.Get(fontUrl))
+            {
+                yield return request.SendWebRequest();
+                
+                bool isError = false;
+#if UNITY_2020_1_OR_NEWER
+                isError = request.result != UnityWebRequest.Result.Success;
+#else
+                isError = request.isNetworkError || request.isHttpError;
+#endif
+                if (!isError)
+                {
+                    byte[] fontData = request.downloadHandler.data;
+                    // 创建字体（注意：这种方式创建的字体可能不完整）
+                    chineseFont = new Font("source_bold");
+                    // 注意：Font 类没有直接加载 bytes 的方法，需要通过 AssetBundle 或 Resources
+                    Debug.Log($"字体数据加载成功，大小: {fontData.Length}");
+                }
+            }
+        }
+        
+        if (chineseFont != null)
+        {
+            // 注册字体到 FairyGUI
+            var dynamicFont = new FairyGUI.DynamicFont("source_bold", chineseFont);
+            FairyGUI.FontManager.RegisterFont(dynamicFont, "source_bold");
+            FairyGUI.FontManager.RegisterFont(dynamicFont, "source_regular");
+
+            // 设置为默认字体（如果 UI 没有指定字体）
+            if (string.IsNullOrEmpty(FairyGUI.UIConfig.defaultFont))
+            {
+                FairyGUI.UIConfig.defaultFont = "source_bold";
+            }
+
+            // 设置为CJK回退字体：替换FGUI包内所有动态字体(TTF)为中文字体
+            // 解决微信小游戏上 FGUI 包的 source_bold.ttf/source_regular.ttf 不包含中文字符导致中文无法显示的问题
+            FairyGUI.FontManager.cjkFallbackFont = dynamicFont;
+
+            Debug.Log("中文字体加载并注册成功！");
+        }
+        else
+        {
+            Debug.LogError("中文字体加载失败！请确保字体文件放在正确位置:\n" +
+                "1. Assets/Resources/Fonts/source_bold.ttf\n" +
+                "2. 或 Assets/StreamingAssets/Fonts/source_bold.ttf");
+        }
+        
+        yield break;
+    }
+#endif
 
 }

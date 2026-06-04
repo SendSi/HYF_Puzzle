@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using YooAsset;
+using UnityEngine;
 
 public class ResMgr : Singleton<ResMgr>
 {
@@ -44,8 +45,13 @@ public class ResMgr : Singleton<ResMgr>
             return obj;
         }
 
+#if UNITY_WEBGL
+        Debug.LogError($"WebGL平台不支持同步加载，请使用 LoadAssetAsync: {location}");
+        return null;
+#else
         var handle = YooAssets.LoadAssetSync<TObject>(location);
         return _LoadAsset<TObject>(location, handle);
+#endif
     }
     TObject _LoadAsset<TObject>(string location, AssetHandle handle) where TObject : UnityEngine.Object
     {

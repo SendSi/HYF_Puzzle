@@ -15,7 +15,7 @@ MonoBehaviour:
   ProjectConf:
     projectName: HYF_Puzzle
     Appid: wx942c99aa4a84533d
-    CDN: 
+    CDN: http://192.168.1.103/CDN/WebGL
     assetLoadType: 1
     compressDataPackage: 0
     VideoUrl: 
@@ -23,13 +23,13 @@ MonoBehaviour:
     DST: F:/HYF_Puzzle_H5
     StreamCDN: 
     bundleHashLength: 32
-    bundlePathIdentifier: StreamingAssets;
-    bundleExcludeExtensions: json;
+    bundlePathIdentifier: yoo;
+    bundleExcludeExtensions: json;version
     AssetsUrl: 
     MemorySize: 256
     HideAfterCallMain: 1
     preloadFiles: 
-    Orientation: 2
+    Orientation: 3
     bgImageSrc: Assets/WX-WASM-SDK-V2/Runtime/wechat-default/images/background.jpg
     dataFileSubPrefix: 
     maxStorage: 200

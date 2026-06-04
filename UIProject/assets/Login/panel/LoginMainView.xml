@@ -20,16 +20,16 @@
       <relation target="" sidePair="right-right"/>
       <Button title=" " icon="ui://byy9k3ghqg415p"/>
     </component>
-    <component id="n8_7oiz" name="mapBtn_1" src="p78115" fileName="components/button_game_start.xml" xy="472,80" group="n21_gaz3">
+    <component id="n8_7oiz" name="mapBtn_1" src="p78115" fileName="components/button_game_start.xml" xy="471,80" group="n21_gaz3">
       <Button title="地图1" titleColor="#ffffff" icon="ui://byy9k3gh7oizb" sound="ui://2r331opvu9ouhn" volume="50"/>
     </component>
-    <component id="n47_ijm7" name="mapBtn_2" src="p78115" fileName="components/button_game_start.xml" xy="472,218" size="353,78" group="n21_gaz3">
+    <component id="n47_ijm7" name="mapBtn_2" src="p78115" fileName="components/button_game_start.xml" xy="471,218" size="353,78" group="n21_gaz3">
       <Button title="地图2" titleColor="#ffffff" icon="ui://byy9k3gh7oizb" sound="ui://2r331opvu9ouhn" volume="50"/>
     </component>
-    <component id="n48_ijm7" name="mapBtn_3" src="p78115" fileName="components/button_game_start.xml" xy="472,356" size="353,78" group="n21_gaz3">
-      <Button title="地图3" titleColor="#ffffff" icon="ui://byy9k3gh7oizb" sound="ui://2r331opvu9ouhn" volume="50"/>
+    <component id="n48_ijm7" name="mapBtn_3" src="p78115" fileName="components/button_game_start.xml" xy="471,356" size="353,78" group="n21_gaz3">
+      <Button title="地图333" titleColor="#ffffff" icon="ui://byy9k3gh7oizb" sound="ui://2r331opvu9ouhn" volume="50"/>
     </component>
-    <group id="n21_gaz3" name="btns" xy="472,80" size="353,354" advanced="true">
+    <group id="n21_gaz3" name="btns" xy="471,80" size="353,354" advanced="true">
       <relation target="" sidePair="center-center"/>
     </group>
     <text id="n36_qg41" name="title_03" xy="247,632" pivot="0.5,0.5" size="840,46" font="ui://2r331opvno3vhz9d63" fontSize="16" color="#ffffff" align="center" ubb="true" autoSize="height" strokeColor="#333333" shadowColor="#333333" shadowOffset="0,1" text="感谢您使用本游戏，我们非常重视您的个人信息和隐私保 护。为了更好地保障您的个人权益,在您使用本游戏的服务 前，请务必《用户服务协议》及《用户隐私协议》的各条款。如果您同意并接受，若不同意，请退出游戏。">

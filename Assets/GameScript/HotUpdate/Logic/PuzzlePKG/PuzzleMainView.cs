@@ -25,6 +25,13 @@ namespace PuzzlePKG
             var maxX = _bg.x - itemCellValue;
             var maxY = _bg.y - itemCellValue;
 
+            // 检查配置表是否已初始化（WebGL平台是异步加载）
+            if (CfgLubanMgr.Instance.globalTab == null)
+            {
+                Debug.LogError("配置表未初始化，请确保 CfgLubanMgr.InitAsync() 已完成");
+                return;
+            }
+
             mPuzzleList = CfgLubanMgr.Instance.globalTab.TbPuzzleConfig.DataList;
             mPuzzleList = OtherUtils.Instance.GetRandomList(mPuzzleList); //打乱排序
             this._yesTxt.text = $"已完成:0/{mPuzzleList.Count}";

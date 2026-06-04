@@ -17,7 +17,7 @@ public class Jenkins2Unity : EditorWindow
     private int editPlayModeIndex = 0;
     private int buildTypeIndex = 0;
 
-    private readonly string[] playModeOptions = new string[] { "OfflinePlayMode", "HostPlayMode" };
+    private readonly string[] playModeOptions = new string[] { "OfflinePlayMode", "HostPlayMode","WebPlayMode" };
     private readonly string[] buildTypeOptions = new string[] { "出包", "出热更" };
 
     private const string AppConfigPath = @"Assets/GameScript/AOT/AppConfig.cs";

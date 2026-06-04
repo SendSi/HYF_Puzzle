@@ -162,6 +162,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.HYFClient.ML
     Standalone: com.HYFClient.ML
+    WebGL: com.HYFClient.ML
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -752,6 +753,7 @@ PlayerSettings:
     Server: FAIRYGUI_SPINE
     Standalone: FAIRYGUI_SPINE;ODIN_INSPECTOR;ODIN_INSPECTOR_3;ODIN_INSPECTOR_3_1;ODIN_INSPECTOR_3_2;ODIN_INSPECTOR_3_3
     WebGL: ODIN_INSPECTOR;ODIN_INSPECTOR_3;ODIN_INSPECTOR_3_1;ODIN_INSPECTOR_3_2;ODIN_INSPECTOR_3_3
+    WeixinMiniGame: ODIN_INSPECTOR;ODIN_INSPECTOR_3;ODIN_INSPECTOR_3_1;ODIN_INSPECTOR_3_2;ODIN_INSPECTOR_3_3
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

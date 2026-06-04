@@ -11,7 +11,7 @@ using UnityEditor.SceneManagement;
 /// <summary> Jenkins 打包命令</summary>
 public static class JenkinsCommand
 {
-    private static string _buildTarget = "Android";
+    private static string _buildTarget = "WebGL"; //MiniGame  WebGL
 
     // [MenuItem("Jenkins/当前平台_出_整包",false,102)]
     public static void JenkinsBuildTarget()
@@ -176,6 +176,11 @@ taskkill /im Unity.exe /f
             target = BuildTarget.Android;
             targetGroup = BuildTargetGroup.Android;
         }
+        else if (targetStr == "WebGL")
+        {
+            target = BuildTarget.WebGL;
+            targetGroup = BuildTargetGroup.WebGL;
+        }
         else
         {
             target = BuildTarget.StandaloneWindows64;
@@ -320,6 +325,11 @@ taskkill /im Unity.exe /f
         {
             p.BuildTarget = BuildTarget.Android;
         }
+        else if (buildTarget.Contains("WebGL"))
+        {
+            p.BuildTarget = BuildTarget.WebGL;
+        }
+
         else
         {
             p.BuildTarget = BuildTarget.StandaloneWindows64;
@@ -361,6 +371,11 @@ taskkill /im Unity.exe /f
             EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
             p.BuildTarget = BuildTarget.Android;
         }
+        else if (buildTarget.Contains("WebGL"))
+        {
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.WebGL, BuildTarget.WebGL);
+            p.BuildTarget = BuildTarget.WebGL;
+        }
         else
         {
             EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
@@ -396,6 +411,11 @@ taskkill /im Unity.exe /f
         {
             YooHelperEditor.RunCopyResTarget(appVersion, resVersion); //热更状态下 的 才需去copy到cdn
         }
+        else if (playModeStr.Equals("WebPlayMode"))
+        {
+            YooHelperEditor.RunCopyResTarget(appVersion, resVersion); //热更状态下 的 才需去copy到cdn
+            YooHelperEditor.RunCopyResStreamingAssets(resVersion);
+        }
     }
 
     //  打包 APK或exe
@@ -420,6 +440,11 @@ taskkill /im Unity.exe /f
             options.locationPathName = $"BuildAndroid/hyf_{playModeStr}_{version}.apk";
             Debug.Log($"Starting build for Android: {options.locationPathName}");
         }
+        else if (buildTarget == "WebGL" || buildTarget == "MiniGame")
+        {
+            // WXEditorSettingHelper.GenSwitch();
+            return;
+        }
         else
         {
             options.target = BuildTarget.StandaloneWindows64;
@@ -443,6 +468,9 @@ taskkill /im Unity.exe /f
             case BuildTarget.StandaloneWindows:
             case BuildTarget.StandaloneWindows64:
                 return "Windows";
+            case BuildTarget.WebGL:
+                return "WebGL";
+
             default:
                 Debug.LogWarning($"[GetCurrentBuildTargetString] 未识别的平台: {activeTarget}，默认返回Android");
                 return "Android";

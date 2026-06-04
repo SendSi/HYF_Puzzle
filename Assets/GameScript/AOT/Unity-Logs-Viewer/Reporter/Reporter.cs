@@ -1721,7 +1721,9 @@ public class Reporter : MonoBehaviour
 		if (gestureLength > gestureBase && gestureSum.magnitude < gestureBase / 2) {
 			gestureDetector.Clear();
 			gestureCount++;
-			if (gestureCount >= numOfCircleToShow)
+			// 已经显示时，划超过2圈就关闭；没显示时，达到numOfCircleToShow圈就打开
+			int targetCount = show ? 2 : numOfCircleToShow;
+			if (gestureCount >= targetCount)
 				return true;
 		}
 
@@ -1847,6 +1849,21 @@ public class Reporter : MonoBehaviour
 		}
 	}
 
+	void doHide()
+	{
+		show = false;
+		ReporterGUI gui = gameObject.GetComponent<ReporterGUI>();
+		if (gui != null)
+			DestroyImmediate(gui);
+
+		try {
+			gameObject.SendMessage("OnHideReporter");
+		}
+		catch (System.Exception e) {
+			Debug.LogException(e);
+		}
+	}
+
 	private bool isReporterEnabled = true;
 
 	public void SetTmpReportEnable(bool isShow)
@@ -1872,8 +1889,11 @@ public class Reporter : MonoBehaviour
 #endif
 
 		calculateStartIndex();
-		if (!show && isGestureDone()) {
-			doShow();
+		if (isGestureDone()) {
+			if (!show)
+				doShow();
+			else
+				doHide();
 		}
 
 

@@ -18,8 +18,11 @@ namespace Login
         public GButton _mapBtn_3;
         public GGroup _btns;
         public GTextField _title_03;
-        public GTextField _title_04;
         public GComboBox _languCom;
+        public GTextField _title_progress;
+        public GButton _btn_progress2;
+        public GButton _btn_progress10;
+        public GButton _btn_progress100;
         public const string URL = "ui://byy9k3ghezv21ygcga7";
 
         public static LoginMainView CreateInstance()
@@ -42,8 +45,11 @@ namespace Login
             _mapBtn_3 = (GButton)GetChild("mapBtn_3");
             _btns = (GGroup)GetChild("btns");
             _title_03 = (GTextField)GetChild("title_03");
-            _title_04 = (GTextField)GetChild("title_04");
             _languCom = (GComboBox)GetChild("languCom");
+            _title_progress = (GTextField)GetChild("title_progress");
+            _btn_progress2 = (GButton)GetChild("btn_progress2");
+            _btn_progress10 = (GButton)GetChild("btn_progress10");
+            _btn_progress100 = (GButton)GetChild("btn_progress100");
         }
     }
 }

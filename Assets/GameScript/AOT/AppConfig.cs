@@ -4,10 +4,8 @@ public static class AppConfig
     public static string serverURL = "https://localhost:5001";//服务器地址
     // public static string serverURL = "https://tylearymf.familyds.com:8888";//服务器地址
 
-    // public static string hostServerIP = "http://192.168.1.103"; //cdn资源服务器
-    // public static string hostServerIP = "https://cdn.jsdelivr.net/gh/SendSi/PuzzleCDN@v1.0.0"; //cdn资源服务器
-    public static string hostServerIP = "https://fastly.jsdelivr.net/gh/SendSi/PuzzleCDN@v1.0.0"; //cdn资源服务器
-    // public static string hostServerIP = "https://github.com/SendSi/PuzzleCDN/tree/v1.0.0"; //cdn资源服务器
+    public static string hostServerIP = "http://192.168.1.103"; //cdn资源服务器  http://192.168.1.103/CDN/WebGL
+    // public static string hostServerIP = "https://fastly.jsdelivr.net/gh/SendSi/PuzzleCDN@v1.0.1"; //cdn资源服务器  https://fastly.jsdelivr.net/gh/SendSi/PuzzleCDN@v1.0.1/CDN/WebGL
     // public static string hostServerIP = "http://127.0.0.1"; //cdn资源服务器
 
     public static string appVersion = "v1.0.0"; //打exe时(apk时) 的版本

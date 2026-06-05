@@ -15,7 +15,7 @@ public class ProxyLoginModule : Singleton<ProxyLoginModule>,IProxy
         CheckLoad(() =>
         {
             var targetView = UIMgr.Instance.OpenUIViewCom<LoginMainView>(pkgName);
-            targetView.SetData("v1.0");
+            targetView.SetData("v1.0.0");
         });
     }
 

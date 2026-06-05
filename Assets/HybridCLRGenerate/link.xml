@@ -6,6 +6,7 @@
     <type fullname="FGUILoader" preserve="all" />
     <type fullname="GameMain" preserve="all" />
     <type fullname="Singleton`1" preserve="all" />
+    <type fullname="WXCloudStorageNative" preserve="all" />
   </assembly>
   <assembly fullname="Debuger">
     <type fullname="Debuger" preserve="all" />

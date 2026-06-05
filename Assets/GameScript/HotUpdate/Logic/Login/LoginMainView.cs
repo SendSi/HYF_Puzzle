@@ -22,6 +22,17 @@ namespace Login
             this._mapBtn_2.onClick.Set(OnClickMapBtn2);
             this._mapBtn_3.onClick.Set(OnClickMapBtn3);
 
+            // 初始化时显示进度（先从本地读，等云端回调回来再更新）
+            int savedProgress = WXCloudStorageManager.Instance.GetProgress();
+            this._title_progress.text = $"当前进度是:{savedProgress}";//服务端获取进度
+
+            // 监听云端数据加载完成事件（拖删后重新安装时异步回调）
+            WXCloudStorageManager.Instance.OnProgressChanged += OnProgressLoadedFromCloud;
+
+            this._btn_progress2.onClick.Set(OnClickProgress2Btn);
+            this._btn_progress10.onClick.Set(OnClickProgress10Btn);
+            this._btn_progress100.onClick.Set(OnClickProgress100Btn);
+
             // 简体中文SimChinese  繁体中文TraChinese  英文English 
             if (AppConfig.currLang == "SimChinese")
             {
@@ -39,6 +50,48 @@ namespace Login
             this._languCom.selectedIndex = _currComValue;
             this._languCom.items = new[] { "简体中文", "繁體中文", "English" };
             this._languCom.onChanged.Set(OnChangedLanguage);
+        }
+
+        //上传服务端器 第2关
+        private void OnClickProgress2Btn()
+        {
+            SaveProgressToCloud(2);
+        }
+        //上传服务端器 第10关
+        private void OnClickProgress10Btn()
+        {
+            SaveProgressToCloud(10);
+        }
+        //上传服务端器 第100关
+        private void OnClickProgress100Btn()
+        {
+            SaveProgressToCloud(100);
+        }
+
+        /// <summary>
+        /// 云端进度加载完成后的回调（异步）
+        /// </summary>
+        private void OnProgressLoadedFromCloud(int level)
+        {
+            this._title_progress.text = $"当前进度是:{level}";
+            Debuger.Log($"[LoginMainView] 云端进度已刷新: 第{level}关");
+        }
+
+        /// <summary>
+        /// 保存进度到微信云端（卸载后数据不丢失）
+        /// </summary>
+        private void SaveProgressToCloud(int level)
+        {
+            // 更新 UI 显示
+            this._title_progress.text = $"当前进度是:{level}";
+
+            // 保存到微信云端存储
+            WXCloudStorageManager.Instance.SaveProgress(level);
+
+            // 显示提示
+            ProxyCommonPKGModule.Instance.AddToastStr($"第{level}关进度已保存到云端");
+
+            Debuger.Log($"[LoginMainView] 进度已保存到微信云端: 第{level}关");
         }
 
         private void OnClickMapBtn1()
@@ -103,6 +156,7 @@ namespace Login
 
         public override void Dispose()
         {
+            WXCloudStorageManager.Instance.OnProgressChanged -= OnProgressLoadedFromCloud;
             base.Dispose();
         }
 

@@ -24,6 +24,7 @@ namespace Login
 
             // 初始化时显示进度（先从本地读，等云端回调回来再更新）
             int savedProgress = WXCloudStorageManager.Instance.GetProgress();
+            if (savedProgress <= 0) savedProgress = 1;
             this._title_progress.text = $"当前进度是:{savedProgress}";//服务端获取进度
 
             // 监听云端数据加载完成事件（拖删后重新安装时异步回调）

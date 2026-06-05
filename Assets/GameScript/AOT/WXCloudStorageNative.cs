@@ -13,6 +13,12 @@ public static class WXCloudStorageNative
     [System.Runtime.InteropServices.DllImport("__Internal")]
     private static extern void WXGetUserCloudStorage(string key);
 
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXSetStorageSync(string key, string value);
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXGetStorageSync(string key);
+
     public static void SetUserCloudStorage(string jsonKVData)
     {
         WXSetUserCloudStorage(jsonKVData);
@@ -21,6 +27,16 @@ public static class WXCloudStorageNative
     public static void GetUserCloudStorage(string key)
     {
         WXGetUserCloudStorage(key);
+    }
+
+    public static void SetStorageSync(string key, string value)
+    {
+        WXSetStorageSync(key, value);
+    }
+
+    public static void GetStorageSync(string key)
+    {
+        WXGetStorageSync(key);
     }
 #else
     public static void SetUserCloudStorage(string jsonKVData)
@@ -31,6 +47,16 @@ public static class WXCloudStorageNative
     public static void GetUserCloudStorage(string key)
     {
         Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip cloud storage.");
+    }
+
+    public static void SetStorageSync(string key, string value)
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip local storage.");
+    }
+
+    public static void GetStorageSync(string key)
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip local storage.");
     }
 #endif
 }

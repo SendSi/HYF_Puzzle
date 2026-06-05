@@ -220,7 +220,6 @@
     <component id="krfh1iy5b92" name="headmask.xml" path="/components/" exported="true" favorite="true"/>
     <component id="hdmy1iy5b95" name="WindowFrame.xml" path="/components/" exported="true" favorite="true"/>
     <component id="104731iy5b91" name="general_star_grid2.xml" path="/components/" exported="true"/>
-    <image id="e2ps1iy5b98" name="bg8.jpg" path="/images/" exported="true" atlas="alone_npot"/>
     <component id="e2ps1iy5b99" name="btn_tab0.xml" path="/components/" exported="true"/>
     <image id="yya01iy5b9h" name="negative_bg08.png" path="/images/" exported="true" scale="9grid" scale9grid="11,12,8,6"/>
     <image id="1025jhz9d4f" name="com_icon_selected.png" path="/images/" exported="true" scale="9grid" scale9grid="19,29,85,58"/>
@@ -458,7 +457,6 @@
     <component id="evvi1ygcgq4" name="comItem_BottomName_btn.xml" path="/components/" exported="true"/>
     <image id="pi641ygcgq5" name="label_010.png" path="/images/" exported="true"/>
     <component id="w5x51ygcgq6" name="SeasonItemView.xml" path="/components/" exported="true" favorite="true"/>
-    <image id="fk801ygcgqs" name="bg4.jpg" path="/images/" exported="true" atlas="alone_npot"/>
     <image id="y8rv1ygcgqt" name="com_select_03.png" path="/images/" exported="true"/>
     <image id="qdf6hz9cue" name="building_bg_bubble01.png" path="/images/"/>
     <image id="ukvb1ygcg94" name="mainhud_progress013.png" path="/images/"/>
@@ -466,7 +464,6 @@
     <image id="oepthz9cp3" name="main_bar02.png" path="/images/" scale="9grid" scale9grid="13,0,16,4"/>
     <image id="oepthz9cp4" name="main_bar03.png" path="/images/" scale="9grid" scale9grid="11,0,22,4"/>
     <image id="oepthz9cp1" name="main_bar04.png" path="/images/" scale="9grid" scale9grid="11,0,22,4"/>
-    <image id="w6lt1ygcg9o" name="bg_chat_09(1).png" path="/images/" exported="true" scale="9grid" scale9grid="220,12,53,14"/>
     <image id="ig901ygcg9n" name="btn_bg.png" path="/images/" exported="true" scale="9grid" scale9grid="9,10,111,26"/>
     <component id="ig9038" name="comBtn_Icon.xml" path="/images/" exported="true"/>
     <component id="ig90hz9czq" name="comBtn_IconTxt.xml" path="/images/" exported="true"/>
@@ -492,6 +489,7 @@
     <component id="mnqw1ygcga8" name="titleContent.xml" path="/panel/" exported="true"/>
     <component id="eh0b1ygcgrz" name="GlobalModalWaiting.xml" path="/components/" exported="true"/>
     <image id="eh0b1ygcgs0" name="icon_zzz.png" path="/images/" exported="true"/>
+    <image id="y3wt1ygcgs1" name="bg4.png" path="/images/" exported="true"/>
   </resources>
   <publish name="" genCode="true"/>
 </packageDescription>

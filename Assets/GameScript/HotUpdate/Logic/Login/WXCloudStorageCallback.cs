@@ -55,4 +55,10 @@ public class WXCloudStorageCallback : MonoBehaviour
         Debug.LogError($"[WXCloudStorageCallback] 操作失败: {error}");
         WXCloudStorageManager.Instance.OnCloudDataError(error);
     }
+
+    public void OnLocalLoaded(string value)
+    {
+        Debug.Log($"[WXCloudStorageCallback] 本地加载成功: {value}");
+        WXCloudStorageManager.Instance.OnLocalDataLoaded(value);
+    }
 }

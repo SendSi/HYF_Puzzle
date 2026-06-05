@@ -11,6 +11,7 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     // 本地缓存（作为微信云存储的备份/快速读取）
     private const string LOCAL_PROGRESS_KEY = "GameProgress";
     private const string CLOUD_SYNC_TIME_KEY = "CloudSyncTime";
+    private const string WX_LOCAL_PROGRESS_KEY = "game_progress_local";
 
     // 当前进度
     private int _currentProgress = 0;
@@ -39,16 +40,10 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     /// </summary>
     public void SaveProgress(int level)
     {
-        _currentProgress = level;
+        int localProgress = PlayerPrefsHelper.GetInteger(LOCAL_PROGRESS_KEY, 0);
+        int maxProgress = Mathf.Max(level, _currentProgress, localProgress);
 
-        // 1. 先保存到本地（快速响应）
-        PlayerPrefsHelper.SetInteger(LOCAL_PROGRESS_KEY, level);
-        PlayerPrefsHelper.SetDateTime(CLOUD_SYNC_TIME_KEY, DateTime.Now);
-
-        // 2. 保存到微信云端（卸载后不丢失）
-        SaveToWXCloud(level);
-
-        Debuger.Log($"[WXCloudStorage] 进度已保存: 第{level}关");
+        SaveMergedProgress(maxProgress, true);
     }
 
     /// <summary>
@@ -74,6 +69,7 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     {
         // 尝试从微信云端拉取（非 WebGL 环境下 WXCloudStorageNative 会跳过）
         GetFromWXCloud();
+        GetFromWXLocal();
         // 同时从本地读取作为后备
         int localProgress = PlayerPrefsHelper.GetInteger(LOCAL_PROGRESS_KEY, 0);
         if (_currentProgress <= 0)
@@ -102,6 +98,12 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         Debuger.Log($"[WXCloudStorage] 正在同步到微信云端: 第{level}关");
     }
 
+    private void SaveToWXLocal(int level)
+    {
+        WXCloudStorageNative.SetStorageSync(WX_LOCAL_PROGRESS_KEY, level.ToString());
+        Debuger.Log($"[WXCloudStorage] 正在保存到微信本地: 第{level}关");
+    }
+
     /// <summary>
     /// 从微信用户云存储读取数据
     /// 使用 wx.getUserCloudStorage
@@ -110,6 +112,36 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     {
         // 调用 AOT 中的 P/Invoke 方法从微信云端读取
         WXCloudStorageNative.GetUserCloudStorage("game_progress");
+    }
+
+    private void GetFromWXLocal()
+    {
+        WXCloudStorageNative.GetStorageSync(WX_LOCAL_PROGRESS_KEY);
+    }
+
+    private void SaveMergedProgress(int progress, bool syncWX)
+    {
+        if (progress <= 0)
+            return;
+
+        bool changed = _currentProgress != progress;
+        _currentProgress = progress;
+
+        PlayerPrefsHelper.SetInteger(LOCAL_PROGRESS_KEY, progress);
+        PlayerPrefsHelper.SetDateTime(CLOUD_SYNC_TIME_KEY, DateTime.Now);
+
+        if (syncWX)
+        {
+            SaveToWXLocal(progress);
+            SaveToWXCloud(progress);
+        }
+
+        Debuger.Log($"[WXCloudStorage] 当前最大进度: 第{progress}关");
+
+        if (changed)
+        {
+            OnProgressChanged?.Invoke(_currentProgress);
+        }
     }
 
     #endregion
@@ -123,21 +155,41 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     {
         _cloudDataLoaded = true;
 
+        int localProgress = PlayerPrefsHelper.GetInteger(LOCAL_PROGRESS_KEY, 0);
+        int cloudProgress = 0;
         if (!string.IsNullOrEmpty(value) && int.TryParse(value, out int level) && level > 0)
         {
-            _currentProgress = level;
-            PlayerPrefsHelper.SetInteger(LOCAL_PROGRESS_KEY, level);
-            Debuger.Log($"[WXCloudStorage] 从微信云端加载进度成功: 第{level}关");
+            cloudProgress = level;
+        }
+
+        int maxProgress = Mathf.Max(cloudProgress, localProgress, _currentProgress);
+        if (maxProgress > 0)
+        {
+            SaveMergedProgress(maxProgress, cloudProgress != maxProgress);
+            Debuger.Log($"[WXCloudStorage] 加载进度成功，本地:{localProgress} 云端:{cloudProgress} 当前:{maxProgress}");
         }
         else
         {
-            // 云端没有数据，使用本地数据
-            _currentProgress = PlayerPrefsHelper.GetInteger(LOCAL_PROGRESS_KEY, 0);
-            Debuger.Log($"[WXCloudStorage] 云端无数据，使用本地进度: {_currentProgress}");
+            Debuger.Log("[WXCloudStorage] 本地和云端都没有进度");
+            OnProgressChanged?.Invoke(_currentProgress);
+        }
+    }
+
+    public void OnLocalDataLoaded(string value)
+    {
+        int localProgress = PlayerPrefsHelper.GetInteger(LOCAL_PROGRESS_KEY, 0);
+        int wxLocalProgress = 0;
+        if (!string.IsNullOrEmpty(value) && int.TryParse(value, out int level) && level > 0)
+        {
+            wxLocalProgress = level;
         }
 
-        // 通知 UI 刷新
-        OnProgressChanged?.Invoke(_currentProgress);
+        int maxProgress = Mathf.Max(_currentProgress, localProgress, wxLocalProgress);
+        if (maxProgress > 0)
+        {
+            SaveMergedProgress(maxProgress, true);
+            Debuger.Log($"[WXCloudStorage] 微信本地进度，本地:{localProgress} 微信:{wxLocalProgress} 当前:{maxProgress}");
+        }
     }
 
     /// <summary>

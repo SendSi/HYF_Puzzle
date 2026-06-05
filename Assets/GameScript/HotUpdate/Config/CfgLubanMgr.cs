@@ -60,6 +60,7 @@ public class CfgLubanMgr : Singleton<CfgLubanMgr>
         string[] configFiles = new string[]
         {
             "tbpuzzleconfig",
+            "tbpuzzlemapconfig",
             "tbgmconfig",
             "tbcfg_language",
             "tbscript_language",

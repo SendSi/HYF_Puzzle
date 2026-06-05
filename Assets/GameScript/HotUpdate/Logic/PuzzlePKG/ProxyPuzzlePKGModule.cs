@@ -10,12 +10,12 @@ public class ProxyPuzzlePKGModule : Singleton<ProxyPuzzlePKGModule>, IProxy
         FGUILoader.Instance.AddPackage(pkgName, finishCB);
     }
 
-    public void OpenPuzzleMainView()
+    public void OpenPuzzleMainView(int level = 1)
     {
         CheckLoad(() =>
         {
             var targetView = UIMgr.Instance.OpenUIViewCom<PuzzleMainView>(pkgName);
-            targetView.SetData("打开页面数据传递");
+            targetView.SetData(level);
         });
     }
     public void ClosePuzzleMainView()

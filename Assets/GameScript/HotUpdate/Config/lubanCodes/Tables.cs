@@ -16,6 +16,7 @@ public partial class Tables
     public TbEffectConfig TbEffectConfig {get; }
     public TbGMConfig TbGMConfig {get; }
     public TbPuzzleConfig TbPuzzleConfig {get; }
+    public TbPuzzleMapConfig TbPuzzleMapConfig {get; }
     public TbSoundConfig TbSoundConfig {get; }
     public TbTipTextConfig TbTipTextConfig {get; }
     public TbCfg_Language TbCfgLanguage {get; }
@@ -26,6 +27,7 @@ public partial class Tables
         TbEffectConfig = new TbEffectConfig(loader("tbeffectconfig"));
         TbGMConfig = new TbGMConfig(loader("tbgmconfig"));
         TbPuzzleConfig = new TbPuzzleConfig(loader("tbpuzzleconfig"));
+        TbPuzzleMapConfig = new TbPuzzleMapConfig(loader("tbpuzzlemapconfig"));
         TbSoundConfig = new TbSoundConfig(loader("tbsoundconfig"));
         TbTipTextConfig = new TbTipTextConfig(loader("tbtiptextconfig"));
         TbCfgLanguage = new TbCfg_Language(loader("tbcfg_language"));
@@ -38,6 +40,7 @@ public partial class Tables
         TbEffectConfig.ResolveRef(this);
         TbGMConfig.ResolveRef(this);
         TbPuzzleConfig.ResolveRef(this);
+        TbPuzzleMapConfig.ResolveRef(this);
         TbSoundConfig.ResolveRef(this);
         TbTipTextConfig.ResolveRef(this);
         TbCfgLanguage.ResolveRef(this);

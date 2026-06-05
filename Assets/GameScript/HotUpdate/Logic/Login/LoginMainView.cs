@@ -96,7 +96,9 @@ namespace Login
 
         private void OnClickMapBtn1()
         {
-            ProxyPuzzlePKGModule.Instance.OpenPuzzleMainView();
+            int level = WXCloudStorageManager.Instance.GetProgress();
+            if (level <= 0) level = 1;
+            ProxyPuzzlePKGModule.Instance.OpenPuzzleMainView(level);
         }
 
         private void OnClickMapBtn2()

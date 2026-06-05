@@ -12,6 +12,8 @@ namespace PuzzlePKG
     {
         private List<PuzzleConfig> mPuzzleList;
         private int itemCellValue = 170; //每个格子的大小
+        private int _currentLevel = 1;   //当前关卡
+        private string _currentIconUrl = ""; //当前关卡图片url
 
         public override void OnInit()
         {
@@ -21,9 +23,6 @@ namespace PuzzlePKG
             this._closeButton.onClick.Set(OnClickCloseBtn);
             this._finishBtn.onClick.Set(OnClickFinishBtnGM);
             this._nextBtn.onClick.Set(OnClickNextBtn);
-      
-            var maxX = _bg.x - itemCellValue;
-            var maxY = _bg.y - itemCellValue;
 
             // 检查配置表是否已初始化（WebGL平台是异步加载）
             if (CfgLubanMgr.Instance.globalTab == null)
@@ -31,6 +30,9 @@ namespace PuzzlePKG
                 Debug.LogError("配置表未初始化，请确保 CfgLubanMgr.InitAsync() 已完成");
                 return;
             }
+
+            var maxX = _bg.x - itemCellValue;
+            var maxY = _bg.y - itemCellValue;
 
             mPuzzleList = CfgLubanMgr.Instance.globalTab.TbPuzzleConfig.DataList;
             mPuzzleList = OtherUtils.Instance.GetRandomList(mPuzzleList); //打乱排序
@@ -41,6 +43,12 @@ namespace PuzzlePKG
                 var btnGo_icon = GetChildByPath($"{item.Id}.icon");
                 btnGo_icon.size = new Vector2(1020, 680); //固定尺寸
                 btnGo_icon.SetXY(item.IconPos.Xx, item.IconPos.Yy);
+
+                // 设置当前关卡的图片
+                if (!string.IsNullOrEmpty(_currentIconUrl))
+                {
+                    btnGo_icon.asLoader.url = _currentIconUrl;
+                }
 
                 btnGo_icon.data = new Vector2Int(item.CellPos.Xx, item.CellPos.Yy); //结果值在  icon里的data
                 btnGo.data = new Vector2Int(-1, -1); //初始值
@@ -73,7 +81,8 @@ namespace PuzzlePKG
                     // 每次拖放后都更新进度显示
                     UpdateProgressText();
 
-                    if (btnGo_icon.data.Equals(btnGo.data))
+                    var icon = GetChildByPath($"{item.Id}.icon");
+                    if (icon.data.Equals(btnGo.data))
                     {
                         // 放对了，播放正确音效
                         PlayFairyGUISound("com_03");
@@ -86,6 +95,35 @@ namespace PuzzlePKG
                         PlayShakeAnimation(btnGo);
                     }
                 });
+            }
+        }
+
+        /// <summary>
+        /// 根据当前关卡加载对应图片
+        /// </summary>
+        private void LoadLevelImage()
+        {
+            var mapCfg = CfgLubanMgr.Instance.globalTab.TbPuzzleMapConfig.DataList;
+            PuzzleMapConfig levelCfg = null;
+            foreach (var cfg in mapCfg)
+            {
+                if (cfg.Task == _currentLevel)
+                {
+                    levelCfg = cfg;
+                    break;
+                }
+            }
+
+            if (levelCfg != null && !string.IsNullOrEmpty(levelCfg.UrlIcon))
+            {
+                _currentIconUrl = levelCfg.UrlIcon;
+                // 设置背景大图
+                _iconBg.url = _currentIconUrl;
+                Debug.Log($"[PuzzleMainView] 加载第{_currentLevel}关图片: {_currentIconUrl}");
+            }
+            else
+            {
+                Debug.LogWarning($"[PuzzleMainView] 未找到第{_currentLevel}关的配置，使用默认图片");
             }
         }
 
@@ -298,11 +336,15 @@ namespace PuzzlePKG
             {
                 ProxyCommonPKGModule.Instance.AddToastStr("你已拼了三个啦,加油~~");
             }
-            else if (index >= 24)
+            else if (index >= mPuzzleList.Count)
             {
-                Debug.LogError("拼图 完成了");
+                Debug.Log("拼图 完成了");
                 ProxyCommonPKGModule.Instance.AddToastStr("拼图完成了");
-                // ProxyDialogTipModule.Instance.OpenDialogTip1ViewWin("恭喜", "拼图完成了", "确定", null);
+
+                // 关卡完成，进度+1
+                int nextLevel = _currentLevel + 1;
+                WXCloudStorageManager.Instance.SaveProgress(nextLevel);
+                Debug.Log($"[PuzzleMainView] 第{_currentLevel}关完成，解锁第{nextLevel}关");
             }
 
             Debug.Log($"拼了 {index} 块了");
@@ -313,8 +355,34 @@ namespace PuzzlePKG
             ProxyPuzzlePKGModule.Instance.ClosePuzzleMainView();
         }
 
-        public void SetData(string obj)
+        public void SetData(int level)
         {
+            _currentLevel = level;
+
+            // 加载当前关卡的图片（OnInit 先于 SetData 调用，所以在这里加载）
+            if (CfgLubanMgr.Instance.globalTab != null)
+            {
+                LoadLevelImage();
+
+                // 设置背景图
+                if (!string.IsNullOrEmpty(_currentIconUrl))
+                {
+                    _iconBg.url = _currentIconUrl;
+                }
+
+                // 如果拼图块已初始化，更新它们的图片
+                if (mPuzzleList != null)
+                {
+                    foreach (var item in mPuzzleList)
+                    {
+                        var btnGo_icon = GetChildByPath($"{item.Id}.icon");
+                        if (btnGo_icon != null && !string.IsNullOrEmpty(_currentIconUrl))
+                        {
+                            btnGo_icon.asLoader.url = _currentIconUrl;
+                        }
+                    }
+                }
+            }
         }
 
         public override void Dispose()

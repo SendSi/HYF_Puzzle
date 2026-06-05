@@ -3,19 +3,19 @@
   "libview.iconScale": 0,
   "doc.openedDocs": [
     "ui://791wrm7st16bl7",
-    "ui://byy9k3ghezv21ygcga7"
+    "ui://791wrm7st16bg",
+    "ui://byy9k3ghezv21ygcga7",
+    "ui://byy9k3gha9my1ygcg9y",
+    "ui://byy9k3gha9my1ygcg9z",
+    "ui://byy9k3gh7oizh"
   ],
   "libview.syncEditor": 0,
   "auxline1": true,
   "canvasColor": 10066329,
   "auxline2": true,
-  "doc.activeDoc": "ui://791wrm7st16bl7",
+  "doc.activeDoc": "ui://byy9k3ghezv21ygcga7",
   "libview.twoColumn": false,
   "libview.expandedNodes": [
-    "byy9k3gh",
-    "/",
-    "byy9k3gh",
-    "/panel/",
     "791wrm7s",
     "/",
     "791wrm7s",

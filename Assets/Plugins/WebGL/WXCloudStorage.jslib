@@ -82,13 +82,6 @@ mergeInto(LibraryManager.library, {
             };
 
             console.log('[WXCloudStorage.jslib] cloud database initialized:', envIdStr || 'default', window.__WXCloudStorageDb.collectionName);
-
-            if (typeof wx !== 'undefined' && wx.getStorageSync) {
-                var cachedProgress = parseInt(wx.getStorageSync('game_progress_local') || '0', 10);
-                if (!isNaN(cachedProgress) && cachedProgress > 0) {
-                    WXSetCloudDatabaseProgress(cachedProgress);
-                }
-            }
         } catch (err) {
             console.error('[WXCloudStorage.jslib] cloud database init exception:', err);
             SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', err.message || String(err));
@@ -96,94 +89,14 @@ mergeInto(LibraryManager.library, {
     },
 
     WXGetCloudDatabaseProgress: function() {
-        try {
-            var state = window.__WXCloudStorageDb;
-            if (!state || !state.ready) {
-                SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', 'cloud database not initialized');
-                return;
-            }
-
-            if (typeof wx === 'undefined' || !wx.cloud || !wx.cloud.callFunction) {
-                SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', 'wx.cloud.callFunction not available');
-                return;
-            }
-
-            wx.cloud.callFunction({
-                name: 'progressStorage',
-                data: { action: 'get' },
-                success: function(res) {
-                    var result = res && res.result ? res.result : {};
-                    if (result.ok === false) {
-                        var errorMsg = result.error || 'cloud function get returned ok false';
-                        console.warn('[WXCloudStorage.jslib] cloud function progress load error:', errorMsg, 'env:', result.env || '');
-                        SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', errorMsg);
-                        return;
-                    }
-                    var progress = parseInt(result.progress || 0, 10);
-                    if (isNaN(progress) || progress < 0) {
-                        progress = 0;
-                    }
-                    console.log('[WXCloudStorage.jslib] cloud function progress loaded:', progress, 'env:', result.env || '', 'count:', result.count || 0);
-                    SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbLoaded', String(progress));
-                },
-                fail: function(errorObj) {
-                    console.warn('[WXCloudStorage.jslib] cloud function get fail:', errorObj);
-                    SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', JSON.stringify(errorObj));
-                }
-            });
-        } catch (err) {
-            console.error('[WXCloudStorage.jslib] cloud function get exception:', err);
-            SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', err.message || String(err));
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFRestoreProgressFromCloud) {
+            GameGlobal.__HYFRestoreProgressFromCloud();
         }
     },
 
     WXSetCloudDatabaseProgress: function(progress) {
-        try {
-            var state = window.__WXCloudStorageDb;
-            if (!state || !state.ready) {
-                SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', 'cloud database not initialized');
-                return;
-            }
-
-            var progressValue = progress | 0;
-            if (progressValue <= 0) {
-                return;
-            }
-
-            if (typeof wx === 'undefined' || !wx.cloud || !wx.cloud.callFunction) {
-                SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', 'wx.cloud.callFunction not available');
-                return;
-            }
-
-            wx.cloud.callFunction({
-                name: 'progressStorage',
-                data: {
-                    action: 'set',
-                    progress: progressValue
-                },
-                success: function(res) {
-                    var result = res && res.result ? res.result : {};
-                    if (result.ok === false) {
-                        var errorMsg = result.error || 'cloud function set returned ok false';
-                        console.warn('[WXCloudStorage.jslib] cloud function progress save error:', errorMsg, 'env:', result.env || '');
-                        SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', errorMsg);
-                        return;
-                    }
-                    var savedProgress = parseInt(result.progress || progressValue, 10);
-                    if (isNaN(savedProgress) || savedProgress < progressValue) {
-                        savedProgress = progressValue;
-                    }
-                    console.log('[WXCloudStorage.jslib] cloud function progress saved:', savedProgress, 'env:', result.env || '', 'recordId:', result.recordId || '');
-                    SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbSaved', String(savedProgress));
-                },
-                fail: function(errorObj) {
-                    console.warn('[WXCloudStorage.jslib] cloud function set fail:', errorObj);
-                    SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', JSON.stringify(errorObj));
-                }
-            });
-        } catch (err) {
-            console.error('[WXCloudStorage.jslib] cloud function set exception:', err);
-            SendMessage('WXCloudStorageCallbackObj', 'OnCloudDbError', err.message || String(err));
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFSaveProgressToCloud) {
+            GameGlobal.__HYFSaveProgressToCloud(progress, 'wasm');
         }
     },
 

@@ -16,8 +16,6 @@ exports.main = async (event = {}) => {
   }
 
   try {
-    await ensureCollection()
-
     if (event.action === 'get') {
       return await getProgress(openid, env)
     }
@@ -38,59 +36,49 @@ exports.main = async (event = {}) => {
   }
 }
 
-async function ensureCollection() {
-  try {
-    await db.createCollection(COLLECTION_NAME)
-  } catch (error) {
-    const message = error && (error.errMsg || error.message) ? (error.errMsg || error.message) : String(error)
-    if (!message.includes('already exists') && !message.includes('collection exist')) {
-      throw error
-    }
-  }
-}
-
 async function getProgress(openid, env) {
   const collection = db.collection(COLLECTION_NAME)
-  const result = await collection.where({ _openid: openid, key: PROGRESS_KEY }).get()
-  return { ok: true, progress: getMaxProgress(result.data), env, count: (result.data || []).length }
+  const result = await collection.where({ key: PROGRESS_KEY }).limit(20).get()
+  const records = result.data || []
+  const progress = getMaxProgress(records)
+
+  return {
+    ok: true,
+    progress,
+    env,
+    count: records.length,
+    recordId: getProgressDocId(openid),
+  }
 }
 
 async function setProgress(openid, incomingProgress, env) {
   if (incomingProgress <= 0) {
-    return getProgress(openid, env)
+    return { ok: true, progress: 0, env, saved: false, recordId: getProgressDocId(openid) }
   }
 
   const collection = db.collection(COLLECTION_NAME)
-  const result = await collection.where({ _openid: openid, key: PROGRESS_KEY }).get()
-  const records = result.data || []
-  const progress = Math.max(getMaxProgress(records), incomingProgress)
-  let recordId = ''
+  const recordId = getProgressDocId(openid)
+  await collection.doc(recordId).set({
+    data: {
+      key: PROGRESS_KEY,
+      progress: incomingProgress,
+      updatedAt: db.serverDate(),
+    },
+  })
 
-  if (records.length > 0) {
-    recordId = records[0]._id
-    await collection.doc(recordId).update({
-      data: {
-        progress,
-        updatedAt: db.serverDate(),
-      },
-    })
-  } else {
-    const addResult = await collection.add({
-      data: {
-        key: PROGRESS_KEY,
-        progress,
-        updatedAt: db.serverDate(),
-      },
-    })
-    recordId = addResult._id || ''
-  }
+  return { ok: true, progress: incomingProgress, env, saved: true, recordId }
+}
 
-  return { ok: true, progress, env, saved: true, recordId }
+function getProgressDocId(openid) {
+  return `progress_${openid.replace(/[^A-Za-z0-9_-]/g, '_')}`
+}
+
+function getRecordProgress(record) {
+  if (!record) return 0
+  const progress = parseInt(record.progress || 0, 10)
+  return Number.isNaN(progress) ? 0 : progress
 }
 
 function getMaxProgress(records = []) {
-  return records.reduce((max, record) => {
-    const progress = parseInt(record.progress || 0, 10)
-    return Number.isNaN(progress) ? max : Math.max(max, progress)
-  }, 0)
+  return records.reduce((max, record) => Math.max(max, getRecordProgress(record)), 0)
 }

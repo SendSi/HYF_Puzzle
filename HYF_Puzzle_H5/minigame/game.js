@@ -4,6 +4,7 @@ import './events';
 import './texture-config';
 import unityNamespace from './unity-namespace';
 import './webgl.wasm.framework.unityweb';
+import './wx-cloud-progress-sync';
 import './unity-sdk/index';
 import checkVersion from './check-version';
 import { launchEventType, scaleMode } from './plugin-config';

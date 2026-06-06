@@ -31,8 +31,7 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         base.OnInit();
         // 创建 JS 回调接收对象（GameObject，挂载 WXCloudStorageCallback 脚本）
         WXCloudStorageCallback.EnsureCreated();
-        InitWXCloudDatabase();
-        // 启动时尝试从微信云端拉取数据
+        // 启动时先读微信本地缓存；云端恢复由小游戏原生 JS 兜底脚本处理
         LoadProgressFromCloud();
     }
 
@@ -77,7 +76,6 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         }
 
         GetFromWXLocal();
-        GetFromWXCloudDatabase();
 
         Debuger.Log($"[WXCloudStorage] 当前本地进度: {_currentProgress}");
     }
@@ -152,11 +150,6 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         PlayerPrefsHelper.SetDateTime(CLOUD_SYNC_TIME_KEY, DateTime.Now);
 
         SaveToWXLocal(progress);
-
-        if (syncWX)
-        {
-            SaveToWXCloudDatabase(progress);
-        }
 
         Debuger.Log($"[WXCloudStorage] 当前最大进度: 第{progress}关");
 

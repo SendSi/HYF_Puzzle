@@ -184,7 +184,7 @@ function syncProgressToCloud(progress, source) {
   if (progress <= 0 || syncingFromCloud) return
 
   if (!initCloud()) {
-    saveProgressToUserCloudStorage(progress, source)
+    console.warn('[WXCloudProgressSync] cloud unavailable, skip cloud save:', progress, 'source:', source)
     return
   }
 
@@ -203,7 +203,6 @@ function syncProgressToCloud(progress, source) {
       const result = res && res.result ? res.result : {}
       if (result.ok === false) {
         console.warn('[WXCloudProgressSync] cloud file save failed:', result.error || result, 'source:', source, 'data:', buildCloudData('set', progressToSave))
-        saveProgressToUserCloudStorage(progressToSave, source + '-fallback')
         pendingProgress = Math.max(pendingProgress, progressToSave)
         return
       }
@@ -215,7 +214,6 @@ function syncProgressToCloud(progress, source) {
     },
     fail(error) {
       console.warn('[WXCloudProgressSync] callFunction set fail:', error, 'source:', source, 'data:', buildCloudData('set', progressToSave))
-      saveProgressToUserCloudStorage(progressToSave, source + '-fallback')
       pendingProgress = Math.max(pendingProgress, progressToSave)
     },
     complete() {
@@ -237,8 +235,6 @@ function restoreProgressFromCloud(force) {
     return
   }
   if (restoredOnce && !force) return
-
-  restoreProgressFromUserCloudStorage('restore')
 
   if (!initCloud()) {
     showCloudSyncToast('云环境未就绪')
@@ -314,7 +310,6 @@ function startupRestore(source) {
     syncProgressToCloud(localProgress, 'startup-local-' + source)
   }
 
-  restoreProgressFromUserCloudStorage(source)
   restoreProgressFromCloud(true)
 }
 

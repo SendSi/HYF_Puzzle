@@ -61,18 +61,13 @@ function getDetectedFileIDCandidates(prefix, cloudPath) {
 async function getProgress(openid, env, context = {}) {
   const recordId = getProgressDocId(openid)
   const cloudPath = getProgressCloudPath(openid)
-  const latestCloudPath = getLatestProgressCloudPath()
-  const deviceCloudPath = getDeviceProgressCloudPath(context.appid)
   const errors = []
   const detectedPrefix = await getDetectedFileIDPrefix(openid)
 
+  // 只读取当前 OPENID 对应的文件。不要再读 latest/device 兜底文件，避免读到其它测试进度。
   const candidates = [
     ...getDetectedFileIDCandidates(detectedPrefix, cloudPath),
-    ...getDetectedFileIDCandidates(detectedPrefix, latestCloudPath),
-    ...getDetectedFileIDCandidates(detectedPrefix, deviceCloudPath),
     ...getProgressFileIDCandidates(openid, env),
-    ...getLatestProgressFileIDCandidates(env),
-    ...getDeviceProgressFileIDCandidates(context.appid, env),
   ]
 
   for (const fileID of candidates) {
@@ -89,8 +84,6 @@ async function getProgress(openid, env, context = {}) {
         count: progress > 0 ? 1 : 0,
         recordId,
         cloudPath,
-        latestCloudPath,
-        deviceCloudPath,
         detectedPrefix,
         fileID,
         mode: 'cloud-file.download',
@@ -107,8 +100,6 @@ async function getProgress(openid, env, context = {}) {
     count: 0,
     recordId,
     cloudPath,
-    latestCloudPath,
-    deviceCloudPath,
     detectedPrefix,
     fileID: candidates[0] || '',
     mode: 'cloud-file-empty',
@@ -123,7 +114,6 @@ async function setProgress(openid, incomingProgress, env, context = {}) {
 
   const recordId = getProgressDocId(openid)
   const cloudPath = getProgressCloudPath(openid)
-  const deviceCloudPath = getDeviceProgressCloudPath(context.appid)
   const data = {
     key: PROGRESS_KEY,
     userId: openid,
@@ -140,25 +130,7 @@ async function setProgress(openid, incomingProgress, env, context = {}) {
     fileContent: Buffer.from(JSON.stringify(data), 'utf8'),
   })
 
-  let latestFileID = ''
-  try {
-    const latestResult = await cloud.uploadFile({
-      cloudPath: getLatestProgressCloudPath(),
-      fileContent: Buffer.from(JSON.stringify(data), 'utf8'),
-    })
-    latestFileID = latestResult.fileID || ''
-  } catch (ignore) {}
-
-  let deviceFileID = ''
-  try {
-    const deviceResult = await cloud.uploadFile({
-      cloudPath: deviceCloudPath,
-      fileContent: Buffer.from(JSON.stringify(data), 'utf8'),
-    })
-    deviceFileID = deviceResult.fileID || ''
-  } catch (ignore) {}
-
-  return { ok: true, progress: incomingProgress, env, appid: context.appid || '', saved: true, recordId, cloudPath, latestCloudPath: getLatestProgressCloudPath(), deviceCloudPath, fileID: uploadResult.fileID || getProgressFileIDCandidates(openid, env)[0], latestFileID, deviceFileID, mode: 'cloud-file.upload' }
+  return { ok: true, progress: incomingProgress, env, appid: context.appid || '', saved: true, recordId, cloudPath, fileID: uploadResult.fileID || getProgressFileIDCandidates(openid, env)[0], mode: 'cloud-file.upload' }
 }
 
 async function addProgress(recordId, userId, data) {

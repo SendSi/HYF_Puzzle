@@ -74,6 +74,7 @@ namespace Login
         /// </summary>
         private void OnProgressLoadedFromCloud(int level)
         {
+            if (level <= 0) level = 1;
             this._title_progress.text = $"当前进度是:{level}";
             Debuger.Log($"[LoginMainView] 云端进度已刷新: 第{level}关");
         }
@@ -90,9 +91,9 @@ namespace Login
             WXCloudStorageManager.Instance.SaveProgress(level);
 
             // 显示提示
-            ProxyCommonPKGModule.Instance.AddToastStr($"第{level}关进度已保存到云端");
+            ProxyCommonPKGModule.Instance.AddToastStr($"第{level}关进度已保存");
 
-            Debuger.Log($"[LoginMainView] 进度已保存到微信云端: 第{level}关");
+            Debuger.Log($"[LoginMainView] 进度已保存: 第{level}关");
         }
 
         private void OnClickMapBtn1()

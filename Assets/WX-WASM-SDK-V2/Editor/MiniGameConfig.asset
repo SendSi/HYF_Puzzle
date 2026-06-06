@@ -19,8 +19,8 @@ MonoBehaviour:
     assetLoadType: 1
     compressDataPackage: 0
     VideoUrl: 
-    relativeDST: F:/HYF_Puzzle_H5
-    DST: F:/HYF_Puzzle_H5
+    relativeDST: D:\git_Project\HYF_Puzzle\HYF_Puzzle_H5
+    DST: D:\git_Project\HYF_Puzzle\HYF_Puzzle_H5
     StreamCDN: 
     bundleHashLength: 32
     bundlePathIdentifier: yoo;

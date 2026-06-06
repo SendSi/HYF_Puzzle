@@ -61,4 +61,22 @@ public class WXCloudStorageCallback : MonoBehaviour
         Debug.Log($"[WXCloudStorageCallback] 本地加载成功: {value}");
         WXCloudStorageManager.Instance.OnLocalDataLoaded(value);
     }
+
+    public void OnCloudDbLoaded(string value)
+    {
+        Debug.Log($"[WXCloudStorageCallback] 云数据库加载成功: {value}");
+        WXCloudStorageManager.Instance.OnCloudDbDataLoaded(value);
+    }
+
+    public void OnCloudDbSaved(string msg)
+    {
+        Debug.Log($"[WXCloudStorageCallback] 云数据库保存成功: {msg}");
+        WXCloudStorageManager.Instance.OnCloudDbDataSaved(msg);
+    }
+
+    public void OnCloudDbError(string error)
+    {
+        Debug.LogError($"[WXCloudStorageCallback] 云数据库操作失败: {error}");
+        WXCloudStorageManager.Instance.OnCloudDbDataError(error);
+    }
 }

@@ -19,6 +19,15 @@ public static class WXCloudStorageNative
     [System.Runtime.InteropServices.DllImport("__Internal")]
     private static extern void WXGetStorageSync(string key);
 
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXInitCloudDatabase(string envId, string collectionName);
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXGetCloudDatabaseProgress();
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXSetCloudDatabaseProgress(int progress);
+
     public static void SetUserCloudStorage(string jsonKVData)
     {
         WXSetUserCloudStorage(jsonKVData);
@@ -37,6 +46,21 @@ public static class WXCloudStorageNative
     public static void GetStorageSync(string key)
     {
         WXGetStorageSync(key);
+    }
+
+    public static void InitCloudDatabase(string envId, string collectionName)
+    {
+        WXInitCloudDatabase(envId, collectionName);
+    }
+
+    public static void GetCloudDatabaseProgress()
+    {
+        WXGetCloudDatabaseProgress();
+    }
+
+    public static void SetCloudDatabaseProgress(int progress)
+    {
+        WXSetCloudDatabaseProgress(progress);
     }
 #else
     public static void SetUserCloudStorage(string jsonKVData)
@@ -57,6 +81,21 @@ public static class WXCloudStorageNative
     public static void GetStorageSync(string key)
     {
         Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip local storage.");
+    }
+
+    public static void InitCloudDatabase(string envId, string collectionName)
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip cloud database init.");
+    }
+
+    public static void GetCloudDatabaseProgress()
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip cloud database load.");
+    }
+
+    public static void SetCloudDatabaseProgress(int progress)
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip cloud database save.");
     }
 #endif
 }

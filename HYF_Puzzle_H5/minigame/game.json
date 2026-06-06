@@ -1,6 +1,7 @@
 
 {
   "deviceOrientation" : "landscapeRight",
+  "cloud"             : true,
   "iOSHighPerformance" : true,
   "iOSHighPerformance+" : false,
   "subpackages"         : [
@@ -30,6 +31,14 @@
           "type" : "isolatedContext"
         }
       ]
+    }
+  },
+  "requiredPrivateInfos"       : [
+    "getUserInfo"
+  ],
+  "permission"                 : {
+    "scope.userInfo" : {
+      "desc" : "用于恢复游戏进度"
     }
   },
   "workers"                    : "workers"

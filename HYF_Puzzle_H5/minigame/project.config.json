@@ -23,7 +23,9 @@
     "useApiHook": false,
     "disableUseStrict": false,
     "babelSetting": {
-      "ignore": ["webgl.wasm.framework.unityweb.js"],
+      "ignore": [
+        "webgl.wasm.framework.unityweb.js"
+      ],
       "disablePlugins": [],
       "outputPath": ""
     },

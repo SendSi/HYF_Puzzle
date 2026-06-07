@@ -1,37 +1,36 @@
-
 {
-  "deviceOrientation" : "landscapeRight",
-  "cloud"             : true,
-  "iOSHighPerformance" : true,
-  "iOSHighPerformance+" : false,
-  "subpackages"         : [
+  "deviceOrientation": "landscapeRight",
+  "cloud": true,
+  "iOSHighPerformance": true,
+  "iOSHighPerformance+": false,
+  "subpackages": [
     {
-      "name" : "wasmcode",
-      "root" : "wasmcode/"
+      "name": "wasmcode",
+      "root": "wasmcode/"
     },
     {
-      "name" : "data-package",
-      "root" : "data-package/"
+      "name": "data-package",
+      "root": "data-package/"
     }
   ],
-  "parallelPreloadSubpackages" : [
+  "parallelPreloadSubpackages": [
     {
-      "name" : "wasmcode"
+      "name": "wasmcode"
     },
     {
-      "name" : "data-package"
+      "name": "data-package"
     }
   ],
-  "plugins"                    : {
-    "UnityPlugin" : {
-      "version" : "1.3.5",
-      "provider" : "wxe5a48f1ed5f544b7",
-      "contexts" : [
+  "plugins": {
+    "UnityPlugin": {
+      "version": "1.3.5",
+      "provider": "wxe5a48f1ed5f544b7",
+      "contexts": [
         {
-          "type" : "isolatedContext"
+          "type": "isolatedContext"
         }
       ]
     }
   },
-  "workers"                    : "workers"
+  "workers": "workers"
 }

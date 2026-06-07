@@ -21,12 +21,12 @@ namespace Login
             // 初始化时显示进度（先从本地读，等云端回调回来再更新）
             int savedProgress = WXCloudStorageManager.Instance.GetProgress();
             if (savedProgress <= 0) savedProgress = 1;
-            this._title_progress.text = $"当前进度是:{savedProgress}";//服务端获取进度
+            this._title_progress.text = $"当前进度是:{savedProgress}"; //服务端获取进度
 
             // 监听云端数据加载完成事件（拖删后重新安装时异步回调）
             WXCloudStorageManager.Instance.OnProgressChanged += OnProgressLoadedFromCloud;
 
-            this._btn_progress.onClick.Set(OnClickProgress2Btn);
+            this._btn_progress.onClick.Set(OnClickProgressBtn);
 
             // 简体中文SimChinese  繁体中文TraChinese  英文English 
             if (AppConfig.currLang == "SimChinese")
@@ -42,24 +42,20 @@ namespace Login
                 _currComValue = 2;
             }
 
-   
+#if UNITY_EDITOR
+            _btn_progress.visible = true;
+#else
+            _btn_progress.visible = false;
+#endif
         }
 
-        //上传服务端器 第2关
-        private void OnClickProgress2Btn()
+        //上传服务端器 第5关
+        private void OnClickProgressBtn()
         {
-            SaveProgressToCloud(2);
+            SaveProgressToCloud(5);
         }
-        //上传服务端器 第10关
-        private void OnClickProgress10Btn()
-        {
-            SaveProgressToCloud(10);
-        }
-        //上传服务端器 第100关
-        private void OnClickProgress100Btn()
-        {
-            SaveProgressToCloud(100);
-        }
+
+
 
         /// <summary>
         /// 云端进度加载完成后的回调（异步）
@@ -99,7 +95,7 @@ namespace Login
         {
             ProxyLoginModule.Instance.OpenGameAgeViewWin();
         }
-        
+
         public override void Dispose()
         {
             WXCloudStorageManager.Instance.OnProgressChanged -= OnProgressLoadedFromCloud;

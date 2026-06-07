@@ -12,7 +12,6 @@
     <image id="itz02a" name="com_bg_mask.png" path="/images/" exported="true" scale="9grid" scale9grid="4,4,8,8"/>
     <image id="aibb2e" name="common_arrow_4.png" path="/images/" exported="true"/>
     <component id="kwe92x" name="com_btn_cut.xml" path="/components/" exported="true" favorite="true"/>
-    <image id="m79tcm" name="com_check02(1).png" path="/images/" exported="true" scale="9grid" scale9grid="7,6,16,20"/>
     <component id="m79tco" name="com_btn_check.xml" path="/components/" exported="true"/>
     <image id="7oizdc" name="common_select_01.png" path="/images/" exported="true" scale="9grid" scale9grid="11,11,3,3"/>
     <component id="grwsdo" name="com_ProgressBar4.xml" path="/components/" exported="true"/>
@@ -32,7 +31,6 @@
     <component id="ujpqchc" name="LoadingView.xml" path="/panel/" exported="true"/>
     <component id="b6o0cho" name="btn_head.xml" path="/components/" exported="true"/>
     <component id="pwz3ci7" name="common_btn.xml" path="/components/" exported="true"/>
-    <image id="12fw9cid" name="com_btn_close.png" path="/images/" exported="true"/>
     <component id="sa6m9cip" name="common_btn_11.xml" path="/components/" exported="true"/>
     <component id="k6s79ciy" name="com_item_lbl.xml" path="/components/" exported="true"/>
     <component id="arx1z9cjj" name="com_btn_closeBlank.xml" path="/components/" exported="true" favorite="true"/>
@@ -46,7 +44,6 @@
     <image id="c4umz9cna" name="com_btn_bg01.png" path="/images/" exported="true" scale="9grid" scale9grid="6,6,142,47"/>
     <component id="c4umz9cnc" name="com_btn_001.xml" path="/components/" exported="true" favorite="true"/>
     <image id="c4umz9cne" name="com_bg_tips_arrow.png" path="/images/" exported="true"/>
-    <image id="o283z9cnq" name="com_change07.png" path="/images/" exported="true" scale="9grid" scale9grid="3,5,84,12"/>
     <image id="hqarz9co6" name="com_change08.png" path="/images/" exported="true" scale="9grid" scale9grid="0,3,297,10"/>
     <image id="eaahz9co9" name="com_btn_bg00.png" path="/images/" exported="true" favorite="true" scale="9grid" scale9grid="6,6,142,47"/>
     <component id="eaahz9cob" name="com_btn_01.xml" path="/components/" exported="true"/>
@@ -87,24 +84,16 @@
     <image id="no3vhz9d6a" name="com_bg_resource.png" path="/images/" exported="true" scale="9grid" scale9grid="9,0,2,33"/>
     <image id="no3vhz9d6b" name="com_btn_plus01.png" path="/images/" exported="true"/>
     <image id="no3vhz9d6c" name="com_btn_reduce01.png" path="/images/" exported="true"/>
-    <image id="b2gghz9d6g" name="com_btn_bg02.png" path="/images/" exported="true" scale="9grid" scale9grid="6,6,142,47"/>
     <component id="pyiyhz9d6l" name="RedPoint.xml" path="/components/" exported="true" favorite="true"/>
     <component id="izxehz9d74" name="Popup_bg1.xml" path="/components/" exported="true" favorite="true"/>
     <image id="ux7hhz9d75" name="com_bg_popup1.png" path="/images/" exported="true" scale="9grid" scale9grid="297,119,54,63"/>
     <image id="lfqnhz9d76" name="hero_bg.png" path="/images/" exported="true"/>
-    <image id="lfqnhz9d79" name="attribute_icon01.png" path="/images/" exported="true"/>
     <component id="hxd7hz9d7c" name="circleGeneral.xml" path="/components/" exported="true"/>
     <image id="hxd7hz9d7j" name="title_bg01.png" path="/images/" exported="true" scale="9grid" scale9grid="0,3,363,3"/>
     <image id="hxd7hz9d7o" name="lock_10.png" path="/images/" exported="true"/>
-    <image id="bumchz9d7p" name="negative_bg03.png" path="/images/" exported="true" scale="9grid" scale9grid="19,18,16,13"/>
-    <image id="bumchz9d7q" name="negative_bg04.png" path="/images/" exported="true" scale="9grid" scale9grid="21,0,12,44"/>
-    <image id="bumchz9d7r" name="negative_bg05.png" path="/images/" exported="true" scale="9grid" scale9grid="9,0,18,4"/>
-    <image id="bumchz9d7t" name="negative_bg07.png" path="/images/" exported="true" scale="9grid" scale9grid="20,0,5,50"/>
     <image id="bumchz9d7u" name="negative_strip00.png" path="/images/" exported="true"/>
     <image id="bumchz9d7v" name="negative_strip01.png" path="/images/" exported="true" scale="9grid" scale9grid="13,15,6,5"/>
     <image id="bumchz9d7w" name="negative_strip02.png" path="/images/" exported="true" scale="9grid" scale9grid="12,13,6,5"/>
-    <image id="bumchz9d7x" name="negative_bg01.png" path="/images/" exported="true" scale="9grid" scale9grid="13,12,12,10"/>
-    <image id="bumchz9d7y" name="negative_bg02.png" path="/images/" exported="true" scale="9grid" scale9grid="9,9,18,18"/>
     <image id="bumchz9d83" name="small_btn022.png" path="/images/" exported="true"/>
     <image id="jas1hz9d82" name="com_btn_switch02.png" path="/images/" exported="true"/>
     <image id="jas1hz9d83" name="com_btn_bg001.png" path="/images/" exported="true"/>
@@ -113,10 +102,8 @@
     <component id="hdmy1iy5b95" name="WindowFrame.xml" path="/components/" exported="true" favorite="true"/>
     <component id="104731iy5b91" name="general_star_grid2.xml" path="/components/" exported="true"/>
     <component id="e2ps1iy5b99" name="btn_tab0.xml" path="/components/" exported="true"/>
-    <image id="yya01iy5b9h" name="negative_bg08.png" path="/images/" exported="true" scale="9grid" scale9grid="11,12,8,6"/>
     <image id="1025jhz9d4f" name="com_icon_selected.png" path="/images/" exported="true" scale="9grid" scale9grid="19,29,85,58"/>
     <image id="j9d91qp8vcj" name="com_arrow015.png" path="/images/" exported="true"/>
-    <image id="j9d91qp8vcm" name="negative_bg09.png" path="/images/" exported="true" scale="9grid" scale9grid="64,0,73,25"/>
     <image id="ebe41qp8vcs" name="negative_strip001.png" path="/images/" exported="true" scale="9grid" scale9grid="14,15,7,6"/>
     <image id="ebe41qp8vcv" name="com_tab04.png" path="/images/" exported="true"/>
     <component id="h00fhz9d46" name="generalLock.xml" path="/components/" exported="true" favorite="true"/>
@@ -144,28 +131,21 @@
     <component id="xjmv1qp8vey" name="TickCbtn.xml" path="/components/" exported="true"/>
     <image id="xjmv1qp8vf0" name="com_btn_arrow00.png" path="/images/" exported="true"/>
     <image id="xjmv1qp8vf3" name="head_quantity.png" path="/images/" exported="true"/>
-    <image id="xjmv1qp8vf4" name="negative_bg10.png" path="/images/" exported="true" scale="9grid" scale9grid="14,64,10,128"/>
     <image id="xjmv1qp8vf8" name="com_bg_tips02_mask4.png" path="/images/" exported="true" favorite="true" scale="9grid" scale9grid="30,31,6,4"/>
     <image id="prcz1qp8vfb" name="negative_strip010.png" path="/images/" exported="true" scale="9grid" scale9grid="45,51,2,2"/>
     <component id="prcz1qp8vfc" name="com_btn_tab04.xml" path="/components/" exported="true" favorite="true"/>
     <image id="p11n1qp8vfb" name="small_btn026.png" path="/images/" exported="true"/>
     <image id="p11n1qp8vfd" name="com_arrow018.png" path="/images/" exported="true"/>
     <image id="p11n1qp8vfe" name="com_arrow017.png" path="/images/" exported="true"/>
-    <image id="mouz1qp8vfl" name="com_bg_tips03_3.png" path="/images/" exported="true" scale="9grid" scale9grid="16,16,21,22"/>
-    <image id="k0s51qp8vfm" name="negative_bg02_2.png" path="/images/" exported="true" scale="9grid" scale9grid="9,9,18,18"/>
     <image id="fx9i1ygcfgj" name="new_bg05.png" path="/images/" exported="true"/>
     <component id="gqih1ygcfgk" name="com_little_window2.xml" path="/components/" exported="true"/>
     <image id="gqih1ygcfgl" name="new_bg06.png" path="/images/" exported="true"/>
-    <image id="gqih1ygcfgm" name="negative_bg19.png" path="/images/" exported="true" scale="9grid" scale9grid="24,7,48,14"/>
-    <image id="gqih1ygcfgy" name="negative_bg20.png" path="/images/" exported="true"/>
-    <image id="gqih1ygcfgz" name="negative_bg21.png" path="/images/" exported="true"/>
     <component id="vlhb1ygcfh0" name="listButton01.xml" path="/components/" exported="true"/>
     <component id="j3xs9pm" name="btn_head4.xml" path="/components/" exported="true" favorite="true"/>
     <component id="sfia1ygcfhf" name="com_btn_null.xml" path="/components/" exported="true"/>
     <component id="d37l1ygcfhi" name="Item_Currency.xml" path="/components/" exported="true"/>
     <component id="ld4m1ygcfhr" name="com_btnAdd2.xml" path="/components/" exported="true"/>
     <component id="d5so1ygcfk6" name="com_btn_buy1.xml" path="/components/" exported="true"/>
-    <image id="91o91ygcfkr" name="cityupgrade_marker.png" path="/images/" exported="true"/>
     <image id="itkw1ygcfke" name="bottomframe_01.png" path="/images/" exported="true"/>
     <component id="itkw1ygcfkf" name="com_btn_00_redPoint.xml" path="/components/" exported="true" favorite="true"/>
     <component id="sd0v1ygcfky" name="com_btn_01_redPoint.xml" path="/components/" exported="true"/>
@@ -174,17 +154,13 @@
     <image id="mqls1ygcfi6" name="welfare_btn_bg07.png" path="/images/" exported="true" scale="9grid" scale9grid="34,0,27,108"/>
     <image id="8lkd1ygcfm4" name="com_arms_bg02.png" path="/images/" exported="true"/>
     <image id="dfgw1ygcfma" name="com_btn_bg0002.png" path="/images/" exported="true" scale="9grid" scale9grid="11,8,92,37"/>
-    <image id="dfgw1ygcfmc" name="com_btn_bg0001(1).png" path="/images/" exported="true"/>
     <component id="dfgw1ygcfmd" name="com_btn_0002.xml" path="/components/" exported="true"/>
-    <image id="dfgw1ygcfmf" name="com_change04.png" path="/images/" exported="true" scale="9grid" scale9grid="0,1,112,18"/>
     <component id="dfgw1ygcfmg" name="com_btn_0001.xml" path="/components/" exported="true"/>
     <image id="8ur01ygcfml" name="welfare_btn_bg09.png" path="/images/" exported="true"/>
     <image id="gw9a1ygcfmn" name="com_bg_tips05(1).png" path="/images/" exported="true" scale="9grid" scale9grid="91,34,18,35"/>
-    <image id="ihid1ygcfmp" name="com_change06.png" path="/images/" exported="true" scale="9grid" scale9grid="26,0,253,43"/>
     <image id="8rmp1ygcfmy" name="small_btn018.png" path="/images/" exported="true"/>
     <image id="pepa1ygcfng" name="com_bg_tips02_mask1.png" path="/images/" exported="true" scale="9grid" scale9grid="30,23,42,46"/>
     <image id="tj0x1ygcfni" name="com_icon_token1.png" path="/images/" exported="true"/>
-    <image id="b1o21ygcfnq" name="negative_bg26.png" path="/images/" exported="true" scale="9grid" scale9grid="36,34,4,7"/>
     <component id="n1oz1ygcfoa" name="com_btn_05.xml" path="/components/" exported="true"/>
     <image id="n1oz1ygcfob" name="btn_icon031_delete.png" path="/images/" exported="true"/>
     <image id="g4fb1ygcfod" name="small_btn036.png" path="/images/" exported="true"/>
@@ -207,12 +183,10 @@
     <sound id="u9ouhb" name="com_11.mp3" path="/sound/" exported="true"/>
     <sound id="u9ouhm" name="com_12.mp3" path="/sound/" exported="true"/>
     <sound id="u9ouhn" name="com_13.mp3" path="/sound/" exported="true"/>
-    <sound id="qok1hz9cy6" name="ui_quest_new.mp3" path="/sound/" exported="true"/>
     <sound id="qok1hz9cy9" name="ui_smithing_improveweapon_01.mp3" path="/sound/" exported="true"/>
     <image id="hc7e1ygcgly" name="negative_strip014.png" path="/images/" exported="true" scale="9grid" scale9grid="12,9,7,12"/>
     <image id="c92h2m" name="btn_enter01.png" path="/images/" exported="true"/>
     <image id="c7781ygcgmm" name="welfare_btn_bg22.png" path="/images/" exported="true"/>
-    <image id="za6y1ygcgmn" name="welfare_btn_bg23.png" path="/images/" exported="true" scale="9grid" scale9grid="53,9,15,18"/>
     <image id="gv9e1ygcgmq" name="small_btn037.png" path="/images/" exported="true"/>
     <component id="gv9e1ygcgmr" name="com_btn_icon2.xml" path="/components/" exported="true"/>
     <component id="ho0c1ygcgnt" name="btn_head6.xml" path="/components/" exported="true" favorite="true"/>
@@ -222,24 +196,14 @@
     <image id="edhk1ygcgq2" name="common_exist02.png" path="/images/" exported="true"/>
     <component id="evvi1ygcgq4" name="comItem_BottomName_btn.xml" path="/components/" exported="true"/>
     <component id="w5x51ygcgq6" name="SeasonItemView.xml" path="/components/" exported="true" favorite="true"/>
-    <image id="ukvb1ygcg94" name="mainhud_progress013.png" path="/images/"/>
-    <image id="oepthz9cp2" name="main_bar01.png" path="/images/" scale="9grid" scale9grid="20,0,6,5"/>
-    <image id="oepthz9cp3" name="main_bar02.png" path="/images/" scale="9grid" scale9grid="13,0,16,4"/>
-    <image id="oepthz9cp4" name="main_bar03.png" path="/images/" scale="9grid" scale9grid="11,0,22,4"/>
-    <image id="oepthz9cp1" name="main_bar04.png" path="/images/" scale="9grid" scale9grid="11,0,22,4"/>
     <image id="ig901ygcg9n" name="btn_bg.png" path="/images/" exported="true" scale="9grid" scale9grid="9,10,111,26"/>
-    <component id="ig9038" name="comBtn_Icon.xml" path="/images/" exported="true"/>
-    <component id="ig90hz9czq" name="comBtn_IconTxt.xml" path="/images/" exported="true"/>
-    <component id="nqbv1ygcg9y" name="comBtn_tab.xml" path="/images/" exported="true"/>
     <component id="odfq1ygcgrr" name="Item_PropBag.xml" path="/components/" exported="true" favorite="true"/>
     <component id="g17g1ygcfn7" name="plot_btn2.xml" path="/images/"/>
     <component id="tixj1ygcg9p" name="ToastTipView.xml" path="/panel/" exported="true"/>
     <component id="tixj1ygcg9o" name="ToastItem.xml" path="/components/" exported="true"/>
     <image id="j3xs9pd" name="role_icon03.png" path="/images/" exported="true"/>
     <image id="11e631ygcfiv" name="serviceactivity_bg01.png" path="/images/" exported="true" scale="9grid" scale9grid="0,2,61,4"/>
-    <image id="gr021ygcfgx" name="main_bg04_1.png" path="/images/" scale="9grid" scale9grid="9,9,3,3"/>
     <component id="lcq71qp8vhm" name="healthPbr3.xml" path="/components/"/>
-    <image id="o7xi1ygcgrt" name="main_bg04.png" path="/images/" favorite="true" scale="9grid" scale9grid="8,8,5,4"/>
     <component id="g30w7" name="settingSbr_grip.xml" path="/components/" exported="true"/>
     <component id="lg2o1ygcgrv" name="horseTitle.xml" path="/components/" exported="true"/>
     <component id="lmzq1ygcgrw" name="Item_BaseProp.xml" path="/components/" exported="true" favorite="true"/>

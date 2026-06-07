@@ -5,7 +5,7 @@
       <relation target="" sidePair="width-width,height-height"/>
     </graph>
     <component id="n7_xbay" name="closeButton" src="tv1v1a" fileName="components/com_btn_close.xml" pkg="2r331opv" xy="-4,-2" size="135,68" scale="0.9,0.9"/>
-    <loader id="n99_t16b" name="iconBg" xy="50,60" size="1020,680" alpha="0.3" url="ui://791wrm7sljwt1ygcgb5" align="center" vAlign="middle">
+    <loader id="n99_t16b" name="iconBg" xy="50,60" size="1020,680" alpha="0.3" url="ui://fwahfgnrljwt1ygcgb5" align="center" vAlign="middle">
       <relation target="" sidePair="left-left,top-top"/>
     </loader>
     <graph id="n212_g4ca" name="iconRect" xy="49,59" size="1024,684" type="rect" lineSize="2" lineColor="#ff00ff00" fillColor="#00ffffff">

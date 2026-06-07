@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="fvrverpv">
+  <resources>
+    <image id="dr891" name="map.png" path="/" exported="true"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

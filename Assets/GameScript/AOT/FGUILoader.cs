@@ -17,7 +17,7 @@ public class FGUILoader : Singleton<FGUILoader>
     {
         ["CommonPKG"] = true,
         // ["Emoji"] = true,
-        // ["ItemPKG"] = true,
+        // ["PuzzlePKG"] = true,
     };
 
     protected override void OnInit()

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="fwahfgnr">
+  <resources>
+    <image id="ljwt1ygcgb5" name="map.png" path="/" exported="true" atlas="alone_npot"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

@@ -6,18 +6,18 @@ using UnityEngine;
 namespace PuzzlePKG
 {
     // public enum 
-    
-    
+
+
     public partial class PuzzleMainView : GComponent
     {
         private List<PuzzleConfig> mPuzzleList;
         private int itemCellValue = 170; //每个格子的大小
-        private int _currentLevel = 1;   //当前关卡
+        private int _currentLevel = 1; //当前关卡
         private string _currentIconUrl = ""; //当前关卡图片url
 
         public override void OnInit()
         {
-            EventCenter.Instance.Fire<int>((int)EventEnumAOT.EE_NumOfCircleToShow,3);
+            EventCenter.Instance.Fire<int>((int)EventEnumAOT.EE_NumOfCircleToShow, 3);
 
             base.OnInit();
             this._closeButton.onClick.Set(OnClickCloseBtn);
@@ -98,6 +98,48 @@ namespace PuzzlePKG
             }
         }
 
+
+        /// <summary>
+        /// 从 urlIcon 中解析包名，如 "ui://Map_10/map" → "Map_10"
+        /// </summary>
+        private string GetPkgNameFromUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return "";
+            // 格式: ui://包名/资源名
+            int start = url.IndexOf("//") + 2;
+            int end = url.LastIndexOf('/');
+            if (start >= 2 && end > start)
+                return url.Substring(start, end - start);
+            return "";
+        }
+
+        private void SetImageTask(PuzzleMapConfig levelCfg)
+        {
+            // 从 urlIcon 解析包名，如 "ui://Map_10/map" → "Map_10"
+            string pkgName = GetPkgNameFromUrl(levelCfg.UrlIcon);
+            Debug.Log($"[PuzzleMainView] 加载图片包: {pkgName}, url: {levelCfg.UrlIcon}");
+
+            // 只加载当前关卡对应的那个小包，加载完成后设置所有图片
+            FGUILoader.Instance.AddPackage(pkgName, () =>
+            {
+                _iconBg.url = _currentIconUrl;
+                Debug.Log($"[PuzzleMainView] 包加载完成，设置图片: {_currentIconUrl}");
+
+                // 更新所有拼图块的图片
+                if (mPuzzleList != null)
+                {
+                    foreach (var item in mPuzzleList)
+                    {
+                        var btnGo_icon = GetChildByPath($"{item.Id}.icon");
+                        if (btnGo_icon != null && !string.IsNullOrEmpty(_currentIconUrl))
+                        {
+                            btnGo_icon.asLoader.url = _currentIconUrl;
+                        }
+                    }
+                }
+            });
+        }
+
         /// <summary>
         /// 根据当前关卡加载对应图片
         /// </summary>
@@ -118,7 +160,8 @@ namespace PuzzlePKG
             {
                 _currentIconUrl = levelCfg.UrlIcon;
                 // 设置背景大图
-                _iconBg.url = _currentIconUrl;
+                // _iconBg.url = _currentIconUrl;
+                SetImageTask(levelCfg);
                 Debug.Log($"[PuzzleMainView] 加载第{_currentLevel}关图片: {_currentIconUrl}");
             }
             else
@@ -164,6 +207,7 @@ namespace PuzzlePKG
                         break;
                     }
                 }
+
                 if (!occupied)
                     priority1List.Add(btnGo);
             }
@@ -193,11 +237,11 @@ namespace PuzzlePKG
             var selectedIcon = GetChildByPath($"{selected.name}.icon");
             var targetPos = (Vector2Int)selectedIcon.data;
             selected.data = targetPos;
-            
+
             // 使用 GTween 动画移动到正确位置
             float targetX = 50 + itemCellValue * targetPos.x;
             float targetY = 60 + itemCellValue * targetPos.y;
-            
+
             GTween.To(selected.xy, new Vector2(targetX, targetY), 0.3f)
                 .SetTarget(selected)
                 .OnUpdate((tweener) => { selected.xy = tweener.value.vec2; })
@@ -266,6 +310,7 @@ namespace PuzzlePKG
                 // 如果没找到，尝试直接从默认包获取
                 audioClip = UIPackage.GetItemAssetByURL($"ui://CommonPKG/{soundName}") as NAudioClip;
             }
+
             if (audioClip != null && audioClip.nativeClip != null)
             {
                 Stage.inst.PlayOneShotSound(audioClip.nativeClip, 1f);
@@ -276,7 +321,7 @@ namespace PuzzlePKG
         {
             float originalX = target.x;
             float shakeAmount = 8f; // 抖动幅度
-            
+
             // 创建一个抖动序列
             GTween.To(target.x, originalX + shakeAmount, 0.05f)
                 .SetTarget(target)
@@ -313,6 +358,7 @@ namespace PuzzlePKG
                     completedCount++;
                 }
             }
+
             this._yesTxt.text = $"已完成:{completedCount}/{mPuzzleList.Count}";
         }
 
@@ -360,35 +406,17 @@ namespace PuzzlePKG
             _currentLevel = level;
 
             // 加载当前关卡的图片（OnInit 先于 SetData 调用，所以在这里加载）
+            // SetImageTask 异步加载 Map 包，完成后自动设置 _iconBg 和所有拼图块的 icon.url
             if (CfgLubanMgr.Instance.globalTab != null)
             {
                 LoadLevelImage();
-
-                // 设置背景图
-                if (!string.IsNullOrEmpty(_currentIconUrl))
-                {
-                    _iconBg.url = _currentIconUrl;
-                }
-
-                // 如果拼图块已初始化，更新它们的图片
-                if (mPuzzleList != null)
-                {
-                    foreach (var item in mPuzzleList)
-                    {
-                        var btnGo_icon = GetChildByPath($"{item.Id}.icon");
-                        if (btnGo_icon != null && !string.IsNullOrEmpty(_currentIconUrl))
-                        {
-                            btnGo_icon.asLoader.url = _currentIconUrl;
-                        }
-                    }
-                }
             }
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            EventCenter.Instance.Fire<int>((int)EventEnumAOT.EE_NumOfCircleToShow,2);
+            EventCenter.Instance.Fire<int>((int)EventEnumAOT.EE_NumOfCircleToShow, 2);
         }
     }
 }

@@ -17,7 +17,6 @@ public sealed partial class PuzzleMapConfig : Luban.BeanBase
     public PuzzleMapConfig(ByteBuf _buf) 
     {
         Id = _buf.ReadInt();
-        MType = _buf.ReadInt();
         Task = _buf.ReadInt();
         UrlIcon = _buf.ReadString();
     }
@@ -31,10 +30,6 @@ public sealed partial class PuzzleMapConfig : Luban.BeanBase
     /// key值
     /// </summary>
     public readonly int Id;
-    /// <summary>
-    /// 类型
-    /// </summary>
-    public readonly int MType;
     /// <summary>
     /// 关数
     /// </summary>
@@ -55,7 +50,6 @@ public sealed partial class PuzzleMapConfig : Luban.BeanBase
     {
         return "{ "
         + "id:" + Id + ","
-        + "mType:" + MType + ","
         + "task:" + Task + ","
         + "urlIcon:" + UrlIcon + ","
         + "}";

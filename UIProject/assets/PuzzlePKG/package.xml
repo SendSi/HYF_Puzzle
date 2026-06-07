@@ -45,6 +45,30 @@
     <image id="ljwt1ygcgb4" name="map_09.png" path="/images/map/" exported="true" atlas="alone_npot"/>
     <image id="ljwt1ygcgb5" name="map_01.png" path="/images/map/" exported="true" atlas="alone_npot"/>
     <image id="ljwt1ygcgb6" name="map_02.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="hulp1ygcgb7" name="other_01.png" path="/images/other/"/>
+    <image id="hulp1ygcgb8" name="other_02.png" path="/images/other/"/>
+    <image id="hulp1ygcgb9" name="other_03.png" path="/images/other/"/>
+    <image id="hulp1ygcgba" name="other_04.png" path="/images/other/"/>
+    <image id="hulp1ygcgbb" name="other_05.png" path="/images/other/"/>
+    <image id="hulp1ygcgbc" name="other_06.png" path="/images/other/"/>
+    <image id="hulp1ygcgbd" name="other_07.png" path="/images/other/"/>
+    <image id="hulp1ygcgbe" name="other_08.png" path="/images/other/"/>
+    <image id="hulp1ygcgbf" name="other_09.png" path="/images/other/"/>
+    <image id="hulp1ygcgbg" name="other_10.png" path="/images/other/"/>
+    <image id="hulp1ygcgbh" name="other_11.png" path="/images/other/"/>
+    <image id="hulp1ygcgbi" name="other_12.png" path="/images/other/"/>
+    <image id="hulp1ygcgbj" name="other_13.png" path="/images/other/"/>
+    <image id="hulp1ygcgbk" name="other_14.png" path="/images/other/"/>
+    <image id="dr891ygcgbl" name="map_15.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbm" name="map_16.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbo" name="map_17.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbp" name="map_18.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbq" name="map_19.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbr" name="map_20.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbs" name="map_21.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbt" name="map_22.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbu" name="map_23.png" path="/images/map/" exported="true" atlas="alone_npot"/>
+    <image id="dr891ygcgbv" name="map_24.png" path="/images/map/" exported="true" atlas="alone_npot"/>
   </resources>
   <publish name="" genCode="true"/>
 </packageDescription>

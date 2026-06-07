@@ -81,6 +81,7 @@
     <image id="jrst1ygcga5" name="img_zz_di2.png" path="/images/" exported="true"/>
     <component id="lsme1ygcga6" name="ComboBox1_item.xml" path="/components/"/>
     <component id="ezv21ygcga7" name="LoginMainView.xml" path="/panel/" exported="true"/>
+    <component id="jlo01ygcga8" name="LoginMainView_bak.xml" path="/panel/"/>
   </resources>
   <publish name="" genCode="true"/>
 </packageDescription>

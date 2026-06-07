@@ -15,7 +15,7 @@ MonoBehaviour:
   ProjectConf:
     projectName: HYF_Puzzle
     Appid: wx942c99aa4a84533d
-    CDN: http://192.168.1.103/CDN/WebGL
+    CDN: https://fastly.jsdelivr.net/gh/SendSi/PuzzleCDN@v1.0.2/CDN/WebGL
     assetLoadType: 1
     compressDataPackage: 0
     VideoUrl: 

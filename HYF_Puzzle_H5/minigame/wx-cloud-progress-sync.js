@@ -1,6 +1,5 @@
 const PROGRESS_KEY = 'game_progress_local'
 const CLOUD_FUNCTION_NAME = 'progressStorage'
-const USER_ID_KEY = 'hyf_cloud_user_id'
 
 let cloudReady = false
 let syncingFromCloud = false
@@ -29,47 +28,14 @@ function parseProgress(value) {
 }
 
 function getLocalProgress() {
-  return parseProgress(wx.getStorageSync(PROGRESS_KEY))
-}
-
-function getUserId() {
   try {
-    const accountInfo = wx.getAccountInfoSync ? wx.getAccountInfoSync() : null
-    const appid = accountInfo && accountInfo.miniProgram ? accountInfo.miniProgram.appId || '' : ''
-    const systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : {}
-    const deviceKey = [
-      appid,
-      systemInfo.brand || '',
-      systemInfo.model || '',
-      systemInfo.system || '',
-      systemInfo.platform || '',
-      systemInfo.deviceId || '',
-    ].join('|')
-
-    let saved = wx.getStorageSync(USER_ID_KEY)
-    if (saved) return String(saved)
-
-    saved = 'device_' + hashString(deviceKey)
-    wx.setStorageSync(USER_ID_KEY, saved)
-    return saved
+    return parseProgress(wx.getStorageSync(PROGRESS_KEY))
   } catch (error) {
-    return ''
+    return 0
   }
-}
-
-function hashString(value) {
-  value = String(value || '')
-  let hash = 2166136261
-  for (let i = 0; i < value.length; i += 1) {
-    hash ^= value.charCodeAt(i)
-    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24)
-  }
-  return (hash >>> 0).toString(16)
 }
 
 function buildCloudData(action, progress) {
-  // 不再从前端传 userId。卸载后本地 userId 可能变化，导致保存和恢复不是同一份数据。
-  // 云函数里使用微信稳定 OPENID 作为主键。
   const data = { action }
   if (progress !== undefined) data.progress = progress
   return data
@@ -85,40 +51,6 @@ function stringifyError(error) {
   } catch (ignore) {
     return String(error)
   }
-}
-
-function showCloudSyncToast(title) {
-  try {
-    if (typeof wx !== 'undefined' && wx.showToast) {
-      wx.showToast({ title: String(title).slice(0, 28), icon: 'none', duration: 2500 })
-    }
-  } catch (ignore) {}
-}
-
-function saveProgressToUserCloudStorage(progress, source) {
-  progress = parseProgress(progress)
-  if (progress <= 0) return
-  if (typeof wx === 'undefined' || !wx.setUserCloudStorage) {
-    console.warn('[WXCloudProgressSync] setUserCloudStorage not available')
-    return
-  }
-
-  wx.setUserCloudStorage({
-    KVDataList: [
-      { key: 'game_progress', value: String(progress) },
-      { key: PROGRESS_KEY, value: String(progress) },
-    ],
-    success() {
-      lastSyncedProgress = Math.max(lastSyncedProgress, progress)
-      console.log('[WXCloudProgressSync] user cloud saved:', progress, 'source:', source)
-      showCloudSyncToast('云存档成功:' + progress)
-      notifyUnityProgress(progress, 'user-cloud-save-' + source)
-    },
-    fail(error) {
-      console.error('[WXCloudProgressSync] setUserCloudStorage fail:', error, 'source:', source)
-      showCloudSyncToast('开放云存储失败:' + stringifyError(error))
-    },
-  })
 }
 
 function notifyUnityProgress(progress, source) {
@@ -141,48 +73,9 @@ function notifyUnityProgress(progress, source) {
   setTimeout(notify, 3000)
 }
 
-function restoreProgressFromUserCloudStorage(source) {
-  if (typeof wx === 'undefined' || !wx.getUserCloudStorage) {
-    console.warn('[WXCloudProgressSync] getUserCloudStorage not available')
-    return
-  }
-
-  wx.getUserCloudStorage({
-    keyList: ['game_progress', PROGRESS_KEY],
-    success(res) {
-      const list = res && res.KVDataList ? res.KVDataList : []
-      let progress = 0
-      for (let i = 0; i < list.length; i += 1) {
-        progress = Math.max(progress, parseProgress(list[i].value))
-      }
-
-      const localProgress = getLocalProgress()
-      if (progress > localProgress) {
-        syncingFromCloud = true
-        wx.setStorageSync(PROGRESS_KEY, String(progress))
-        syncingFromCloud = false
-        lastSyncedProgress = Math.max(lastSyncedProgress, progress)
-        console.log('[WXCloudProgressSync] user cloud restored:', progress, 'source:', source)
-        showCloudSyncToast('云存档恢复:' + progress + ':user-cloud-' + source)
-        notifyUnityProgress(progress, 'user-cloud-' + source)
-      } else {
-        console.log('[WXCloudProgressSync] user cloud loaded:', progress, 'local:', localProgress, 'source:', source)
-        if (progress > 0) {
-          notifyUnityProgress(progress, 'user-cloud-loaded-' + source)
-        }
-      }
-    },
-    fail(error) {
-      console.warn('[WXCloudProgressSync] getUserCloudStorage fail:', error, 'source:', source)
-      showCloudSyncToast('云存档读取失败:' + stringifyError(error))
-    },
-  })
-}
-
 function syncProgressToCloud(progress, source) {
   progress = parseProgress(progress)
   if (progress <= 0 || syncingFromCloud) return
-
   if (!initCloud()) {
     console.warn('[WXCloudProgressSync] cloud unavailable, skip cloud save:', progress, 'source:', source)
     return
@@ -202,18 +95,17 @@ function syncProgressToCloud(progress, source) {
     success(res) {
       const result = res && res.result ? res.result : {}
       if (result.ok === false) {
-        console.warn('[WXCloudProgressSync] cloud file save failed:', result.error || result, 'source:', source, 'data:', buildCloudData('set', progressToSave))
+        console.warn('[WXCloudProgressSync] cloud file save failed:', result.error || result, 'source:', source)
         pendingProgress = Math.max(pendingProgress, progressToSave)
         return
       }
 
       lastSyncedProgress = Math.max(lastSyncedProgress, parseProgress(result.progress || progressToSave))
       console.log('[WXCloudProgressSync] cloud file saved:', lastSyncedProgress, 'recordId:', result.recordId || '', 'fileID:', result.fileID || '', 'mode:', result.mode || '', 'source:', source)
-      showCloudSyncToast('云存档成功:' + lastSyncedProgress + ':' + (result.mode || ''))
       notifyUnityProgress(lastSyncedProgress, 'cloud-file-save-' + source)
     },
     fail(error) {
-      console.warn('[WXCloudProgressSync] callFunction set fail:', error, 'source:', source, 'data:', buildCloudData('set', progressToSave))
+      console.warn('[WXCloudProgressSync] callFunction set fail:', error, 'source:', source)
       pendingProgress = Math.max(pendingProgress, progressToSave)
     },
     complete() {
@@ -235,11 +127,7 @@ function restoreProgressFromCloud(force) {
     return
   }
   if (restoredOnce && !force) return
-
-  if (!initCloud()) {
-    showCloudSyncToast('云环境未就绪')
-    return
-  }
+  if (!initCloud()) return
 
   restoredOnce = true
   loading = true
@@ -250,7 +138,6 @@ function restoreProgressFromCloud(force) {
       const result = res && res.result ? res.result : {}
       if (result.ok === false) {
         console.warn('[WXCloudProgressSync] load failed:', result.error || result)
-        showCloudSyncToast('云存档读取失败:' + (result.error || 'unknown'))
         return
       }
 
@@ -263,20 +150,15 @@ function restoreProgressFromCloud(force) {
         syncingFromCloud = true
         wx.setStorageSync(PROGRESS_KEY, String(progress))
         syncingFromCloud = false
-        console.log('[WXCloudProgressSync] cloud file restored local progress:', progress)
-        showCloudSyncToast('云存档恢复:' + progress + ':' + (result.mode || 'cloud-file'))
+        console.log('[WXCloudProgressSync] cloud file restored local progress:', progress, 'mode:', result.mode || '')
         notifyUnityProgress(progress, 'cloud-file-restore')
       } else {
         console.log('[WXCloudProgressSync] cloud file loaded:', cloudProgress, 'local:', localProgress, 'mode:', result.mode || '', 'error:', result.error || '')
-        if (cloudProgress <= 0 && localProgress <= 0) {
-          showCloudSyncToast('云存档为空:' + (result.detectedPrefix ? 'prefix' : 'noprefix') + ':' + (result.error || result.mode || ''))
-        }
         if (progress > 0) notifyUnityProgress(progress, 'cloud-file-loaded')
       }
     },
     fail(error) {
       console.warn('[WXCloudProgressSync] callFunction get fail:', error)
-      showCloudSyncToast('云函数读取失败:' + stringifyError(error))
     },
     complete() {
       loading = false
@@ -300,8 +182,6 @@ function patchStorageSync() {
   console.log('[WXCloudProgressSync] wx.setStorageSync patched')
 }
 
-patchStorageSync()
-
 function startupRestore(source) {
   const localProgress = getLocalProgress()
   if (localProgress > 0) {
@@ -313,6 +193,7 @@ function startupRestore(source) {
   restoreProgressFromCloud(true)
 }
 
+patchStorageSync()
 startupRestore('immediate')
 setTimeout(function restoreAtOneSecond() { startupRestore('1s') }, 1000)
 setTimeout(function restoreAtThreeSeconds() { startupRestore('3s') }, 3000)

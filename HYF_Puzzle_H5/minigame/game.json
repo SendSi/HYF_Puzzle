@@ -33,13 +33,5 @@
       ]
     }
   },
-  "requiredPrivateInfos"       : [
-    "getUserInfo"
-  ],
-  "permission"                 : {
-    "scope.userInfo" : {
-      "desc" : "用于恢复游戏进度"
-    }
-  },
   "workers"                    : "workers"
 }

@@ -2,8 +2,6 @@ const cloud = require('wx-server-sdk')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
-const db = cloud.database()
-const COLLECTION_NAME = 'user_game_progress'
 const PROGRESS_KEY = 'game_progress'
 
 exports.main = async (event = {}) => {
@@ -12,7 +10,7 @@ exports.main = async (event = {}) => {
   const appid = wxContext.APPID || ''
   const unionid = wxContext.UNIONID || ''
   const env = wxContext.ENV || ''
-  const userId = getUserId(event, openid)
+  const userId = getUserId(openid)
 
   if (!userId) {
     return { ok: false, progress: 0, env, appid, error: 'missing user id' }
@@ -20,7 +18,7 @@ exports.main = async (event = {}) => {
 
   try {
     if (event.action === 'get') {
-      return await getProgress(userId, env, { openid, appid, unionid })
+      return await getProgress(userId, env)
     }
 
     if (event.action === 'set') {
@@ -34,13 +32,13 @@ exports.main = async (event = {}) => {
       ok: false,
       progress: 0,
       env,
-      error: error && (error.errMsg || error.message) ? (error.errMsg || error.message) : String(error),
+      error: getErrorMessage(error),
     }
   }
 }
 
-async function getDetectedFileIDPrefix(openid) {
-  const detectorPath = `user_game_progress/detector_${getProgressDocId(openid)}.txt`
+async function getDetectedFileIDPrefix(userId) {
+  const detectorPath = `user_game_progress/detector_${getProgressDocId(userId)}.txt`
   try {
     const uploadResult = await cloud.uploadFile({
       cloudPath: detectorPath,
@@ -58,17 +56,16 @@ function getDetectedFileIDCandidates(prefix, cloudPath) {
   return prefix ? [prefix + cloudPath] : []
 }
 
-async function getProgress(openid, env, context = {}) {
-  const recordId = getProgressDocId(openid)
-  const cloudPath = getProgressCloudPath(openid)
+async function getProgress(userId, env) {
+  const recordId = getProgressDocId(userId)
+  const cloudPath = getProgressCloudPath(userId)
   const errors = []
-  const detectedPrefix = await getDetectedFileIDPrefix(openid)
+  const detectedPrefix = await getDetectedFileIDPrefix(userId)
 
-  // 只读取当前 OPENID 对应的文件。不要再读 latest/device 兜底文件，避免读到其它测试进度。
-  const candidates = [
+  const candidates = dedupe([
     ...getDetectedFileIDCandidates(detectedPrefix, cloudPath),
-    ...getProgressFileIDCandidates(openid, env),
-  ]
+    ...getProgressFileIDCandidates(userId, env),
+  ])
 
   for (const fileID of candidates) {
     try {
@@ -107,17 +104,17 @@ async function getProgress(openid, env, context = {}) {
   }
 }
 
-async function setProgress(openid, incomingProgress, env, context = {}) {
+async function setProgress(userId, incomingProgress, env, context = {}) {
   if (incomingProgress <= 0) {
-    return { ok: true, progress: 0, env, saved: false, recordId: getProgressDocId(openid) }
+    return { ok: true, progress: 0, env, saved: false, recordId: getProgressDocId(userId) }
   }
 
-  const recordId = getProgressDocId(openid)
-  const cloudPath = getProgressCloudPath(openid)
+  const recordId = getProgressDocId(userId)
+  const cloudPath = getProgressCloudPath(userId)
   const data = {
     key: PROGRESS_KEY,
-    userId: openid,
-    openid: context.openid || openid,
+    userId,
+    openid: context.openid || userId,
     appid: context.appid || '',
     unionid: context.unionid || '',
     recordId,
@@ -130,58 +127,24 @@ async function setProgress(openid, incomingProgress, env, context = {}) {
     fileContent: Buffer.from(JSON.stringify(data), 'utf8'),
   })
 
-  return { ok: true, progress: incomingProgress, env, appid: context.appid || '', saved: true, recordId, cloudPath, fileID: uploadResult.fileID || getProgressFileIDCandidates(openid, env)[0], mode: 'cloud-file.upload' }
-}
-
-async function addProgress(recordId, userId, data) {
-  return db.collection(COLLECTION_NAME).add({
-    data: Object.assign({}, data, {
-      userId,
-      recordId,
-    }),
-  })
-}
-
-async function writeProgress(recordId, data) {
-  return db.collection(COLLECTION_NAME).doc(recordId).set({ data })
-}
-
-async function ensureCollection() {
-  try {
-    await db.createCollection(COLLECTION_NAME)
-  } catch (error) {
-    if (!isCollectionAlreadyExistsError(error)) {
-      throw error
-    }
+  return {
+    ok: true,
+    progress: incomingProgress,
+    env,
+    appid: context.appid || '',
+    saved: true,
+    recordId,
+    cloudPath,
+    fileID: uploadResult.fileID || getProgressFileIDCandidates(userId, env)[0],
+    mode: 'cloud-file.upload',
   }
-}
-
-function isCollectionNotFoundError(error) {
-  const message = getErrorMessage(error)
-  return message.indexOf('collection not exists') !== -1 ||
-    message.indexOf('collection not exist') !== -1 ||
-    message.indexOf('collection does not exist') !== -1 ||
-    message.indexOf('cannot find collection') !== -1 ||
-    message.indexOf('DATABASE_COLLECTION_NOT_EXIST') !== -1 ||
-    message.indexOf('-502005') !== -1
-}
-
-function isCollectionAlreadyExistsError(error) {
-  const message = getErrorMessage(error)
-  return message.indexOf('collection already exists') !== -1 ||
-    message.indexOf('collection exists') !== -1 ||
-    message.indexOf('already exist') !== -1 ||
-    message.indexOf('DATABASE_COLLECTION_ALREADY_EXIST') !== -1 ||
-    message.indexOf('-502002') !== -1 ||
-    message.indexOf('-501001') !== -1
 }
 
 function getErrorMessage(error) {
   return error && (error.errMsg || error.message) ? String(error.errMsg || error.message) : String(error)
 }
 
-function getUserId(event, openid) {
-  // 主键必须用云函数拿到的 OPENID；前端本地 userId 卸载后可能变化，不能用于恢复。
+function getUserId(openid) {
   return openid ? String(openid).replace(/[^A-Za-z0-9_-]/g, '_') : ''
 }
 
@@ -193,40 +156,8 @@ function getProgressCloudPath(userId) {
   return `user_game_progress/${getProgressDocId(userId)}.json`
 }
 
-function getLatestProgressCloudPath() {
-  return 'user_game_progress/latest.json'
-}
-
-function getDeviceProgressCloudPath(appid) {
-  const safeAppId = appid ? String(appid).replace(/[^A-Za-z0-9_-]/g, '_') : 'default'
-  return `user_game_progress/device_${safeAppId}.json`
-}
-
 function getProgressFileIDCandidates(userId, env) {
   const path = getProgressCloudPath(userId)
-  if (!env) return [path]
-
-  // 兼容不同云存储 fileID 形态：uploadFile 返回的 fileID 通常包含 env 和资源域。
-  return [
-    `cloud://${env}/${path}`,
-    `cloud://${env}.${path}`,
-    path,
-  ]
-}
-
-function getLatestProgressFileIDCandidates(env) {
-  const path = getLatestProgressCloudPath()
-  if (!env) return [path]
-
-  return [
-    `cloud://${env}/${path}`,
-    `cloud://${env}.${path}`,
-    path,
-  ]
-}
-
-function getDeviceProgressFileIDCandidates(appid, env) {
-  const path = getDeviceProgressCloudPath(appid)
   if (!env) return [path]
 
   return [
@@ -242,6 +173,11 @@ function getRecordProgress(record) {
   return Number.isNaN(progress) ? 0 : progress
 }
 
-function getMaxProgress(records = []) {
-  return records.reduce((max, record) => Math.max(max, getRecordProgress(record)), 0)
+function dedupe(list) {
+  const seen = {}
+  return list.filter((item) => {
+    if (!item || seen[item]) return false
+    seen[item] = true
+    return true
+  })
 }

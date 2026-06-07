@@ -10,13 +10,13 @@ import checkVersion from './check-version';
 import { launchEventType, scaleMode } from './plugin-config';
 import { preloadWxCommonFont } from './unity-sdk/font/index';
 const managerConfig = {
-    DATA_FILE_MD5: '9c022e6f9452856a',
-    CODE_FILE_MD5: '9b034a7011df1d42',
+    DATA_FILE_MD5: 'f1b185199ad4f701',
+    CODE_FILE_MD5: 'ee16974d19936bea',
     GAME_NAME: 'webgl',
     APPID: 'wx942c99aa4a84533d',
-    DATA_FILE_SIZE: '14353715',
+    DATA_FILE_SIZE: '14353746',
     OPT_DATA_FILE_SIZE: '$OPT_DATA_FILE_SIZE',
-    DATA_CDN: 'http://192.168.1.103/CDN/WebGL',
+    DATA_CDN: 'https://fastly.jsdelivr.net/gh/SendSi/PuzzleCDN@v1.0.2/CDN/WebGL',
     // 资源包是否作为小游戏分包加载
     loadDataPackageFromSubpackage: true,
     // 资源包放小游戏分包加载时，是否br压缩

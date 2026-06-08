@@ -148,5 +148,59 @@ mergeInto(LibraryManager.library, {
             console.error('[WXCloudStorage.jslib] getStorageSync exception:', err);
             SendMessage('WXCloudStorageCallbackObj', 'OnLocalLoaded', '');
         }
+    },
+
+    WXShowRewardedVideoAd: function(adUnitId) {
+        try {
+            var adUnitIdStr = UTF8ToString(adUnitId || '');
+            if (!adUnitIdStr) {
+                SendMessage('WXCloudStorageCallbackObj', 'OnRewardedVideoAdFailed', 'missing adUnitId');
+                return;
+            }
+            if (typeof wx === 'undefined' || !wx.createRewardedVideoAd) {
+                SendMessage('WXCloudStorageCallbackObj', 'OnRewardedVideoAdFailed', 'wx.createRewardedVideoAd not available');
+                return;
+            }
+
+            var videoAd = wx.createRewardedVideoAd({ adUnitId: adUnitIdStr });
+            var finished = false;
+            var closed = false;
+
+            var cleanup = function() {
+                if (videoAd.offClose) videoAd.offClose(onClose);
+                if (videoAd.offError) videoAd.offError(onError);
+            };
+            var onClose = function(res) {
+                closed = true;
+                cleanup();
+                if (!res || res.isEnded) {
+                    finished = true;
+                    SendMessage('WXCloudStorageCallbackObj', 'OnRewardedVideoAdFinished', 'success');
+                } else {
+                    SendMessage('WXCloudStorageCallbackObj', 'OnRewardedVideoAdFailed', 'not finished');
+                }
+            };
+            var onError = function(err) {
+                cleanup();
+                var msg = err && (err.errMsg || err.message) ? (err.errMsg || err.message) : JSON.stringify(err || {});
+                msg = msg || 'rewarded video error';
+                var lowerMsg = String(msg).toLowerCase();
+                if (lowerMsg.indexOf('no advertisement') >= 0 || lowerMsg.indexOf('no ad') >= 0 || lowerMsg.indexOf('no_ads') >= 0) {
+                    console.warn('[WXCloudStorage.jslib] rewarded video no advertisement, fallback success:', msg);
+                    SendMessage('WXCloudStorageCallbackObj', 'OnRewardedVideoAdFinished', 'no advertisement fallback');
+                    return;
+                }
+                SendMessage('WXCloudStorageCallbackObj', 'OnRewardedVideoAdFailed', msg);
+            };
+
+            videoAd.onClose(onClose);
+            videoAd.onError(onError);
+            videoAd.show().catch(function() {
+                return videoAd.load().then(function() { return videoAd.show(); });
+            }).catch(onError);
+        } catch (err) {
+            console.error('[WXCloudStorage.jslib] rewarded video exception:', err);
+            SendMessage('WXCloudStorageCallbackObj', 'OnRewardedVideoAdFailed', err.message || String(err));
+        }
     }
 });

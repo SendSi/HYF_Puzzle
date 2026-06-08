@@ -108,6 +108,15 @@ function patchFrameworkJs() {
     'function _WXSetDataCDN',
     'function _WXSetCloudDatabaseProgress(progress){if(typeof GameGlobal!=="undefined"&&GameGlobal.__HYFSaveProgressToCloud){GameGlobal.__HYFSaveProgressToCloud(progress,"wasm")}}'
   )
+  const rewardedVideoPatch = 'function _WXShowRewardedVideoAd(adUnitId){try{var adUnitIdStr=UTF8ToString(adUnitId||"");if(!adUnitIdStr){SendMessage("WXCloudStorageCallbackObj","OnRewardedVideoAdFailed","missing adUnitId");return}if(typeof wx==="undefined"||!wx.createRewardedVideoAd){SendMessage("WXCloudStorageCallbackObj","OnRewardedVideoAdFailed","wx.createRewardedVideoAd not available");return}var videoAd=wx.createRewardedVideoAd({adUnitId:adUnitIdStr});var cleanup=function(){if(videoAd.offClose)videoAd.offClose(onClose);if(videoAd.offError)videoAd.offError(onError)};var onClose=function(res){cleanup();if(!res||res.isEnded){SendMessage("WXCloudStorageCallbackObj","OnRewardedVideoAdFinished","success")}else{SendMessage("WXCloudStorageCallbackObj","OnRewardedVideoAdFailed","not finished")}};var onError=function(err){cleanup();var msg=err&&(err.errMsg||err.message)?err.errMsg||err.message:JSON.stringify(err||{});msg=msg||"rewarded video error";var lowerMsg=String(msg).toLowerCase();if(lowerMsg.indexOf("no advertisement")>=0||lowerMsg.indexOf("no ad")>=0||lowerMsg.indexOf("no_ads")>=0){console.warn("[WXCloudStorage.jslib] rewarded video no advertisement, fallback success:",msg);SendMessage("WXCloudStorageCallbackObj","OnRewardedVideoAdFinished","no advertisement fallback");return}SendMessage("WXCloudStorageCallbackObj","OnRewardedVideoAdFailed",msg)};videoAd.onClose(onClose);videoAd.onError(onError);videoAd.show().catch(function(){return videoAd.load().then(function(){return videoAd.show()})}).catch(onError)}catch(errorObj){console.error("[WXCloudStorage.jslib] rewarded video exception:",errorObj);SendMessage("WXCloudStorageCallbackObj","OnRewardedVideoAdFailed",errorObj.message||String(errorObj))}}'
+  const rewardedVideoStart = content.indexOf('function _WXShowRewardedVideoAd')
+  if (rewardedVideoStart >= 0) {
+    content = replaceFunctionBlock(content, 'function _WXShowRewardedVideoAd', 'function _WXStat', rewardedVideoPatch)
+  } else {
+    const insertBefore = content.indexOf('function _WXGetStorageSync')
+    if (insertBefore < 0) throw new Error('webgl.wasm.framework.unityweb.js 中找不到补丁位置: function _WXGetStorageSync')
+    content = content.slice(0, insertBefore) + rewardedVideoPatch + content.slice(insertBefore)
+  }
   content = replaceFunctionBlock(
     content,
     'function _WXGetStorageSync',

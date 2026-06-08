@@ -28,6 +28,9 @@ public static class WXCloudStorageNative
     [System.Runtime.InteropServices.DllImport("__Internal")]
     private static extern void WXSetCloudDatabaseProgress(int progress);
 
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXShowRewardedVideoAd(string adUnitId);
+
     public static void SetUserCloudStorage(string jsonKVData)
     {
         WXSetUserCloudStorage(jsonKVData);
@@ -61,6 +64,11 @@ public static class WXCloudStorageNative
     public static void SetCloudDatabaseProgress(int progress)
     {
         WXSetCloudDatabaseProgress(progress);
+    }
+
+    public static void ShowRewardedVideoAd(string adUnitId)
+    {
+        WXShowRewardedVideoAd(adUnitId);
     }
 #else
     public static void SetUserCloudStorage(string jsonKVData)
@@ -96,6 +104,11 @@ public static class WXCloudStorageNative
     public static void SetCloudDatabaseProgress(int progress)
     {
         Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip cloud database save.");
+    }
+
+    public static void ShowRewardedVideoAd(string adUnitId)
+    {
+        Debug.Log($"[WXCloudStorageNative] Editor/Standalone mode, skip rewarded video ad: {adUnitId}");
     }
 #endif
 }

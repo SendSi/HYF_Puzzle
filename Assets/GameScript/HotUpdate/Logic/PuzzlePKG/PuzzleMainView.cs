@@ -7,10 +7,13 @@ namespace PuzzlePKG
 {
     public partial class PuzzleMainView : GComponent
     {
+        private const string NEXT_STEP_REWARDED_AD_UNIT_ID = "adunit-请替换成你的激励视频广告位ID";
+
         private List<PuzzleConfig> mPuzzleList;
         private int itemCellValue = 170; //每个格子的大小
         private int _currentLevel = 1; //当前关卡
         private string _currentIconUrl = ""; //当前关卡图片url
+        private bool _isWaitingNextStepAd = false;
 
         public override void OnInit()
         {
@@ -148,6 +151,76 @@ namespace PuzzlePKG
         }
 
         private void OnClickNextBtn()
+        {
+            if (_isWaitingNextStepAd)
+                return;
+
+            if (!HasNextStep())
+                return;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            _isWaitingNextStepAd = true;
+            this._nextBtn.enabled = false;
+            WXCloudStorageManager.Instance.ShowRewardedVideoAd(
+                NEXT_STEP_REWARDED_AD_UNIT_ID,
+                () =>
+                {
+                    _isWaitingNextStepAd = false;
+                    this._nextBtn.enabled = true;
+                    DoNextStepAfterAd();
+                },
+                (error) =>
+                {
+                    _isWaitingNextStepAd = false;
+                    this._nextBtn.enabled = true;
+
+                    if (IsRewardedAdUnavailable(error))
+                    {
+                        ProxyCommonPKGModule.Instance.AddToastStr("暂无广告，直接提示下一步");
+                        Debug.LogWarning($"[PuzzleMainView] 激励视频暂无广告，走兜底提示: {error}");
+                        DoNextStepAfterAd();
+                        return;
+                    }
+
+                    ProxyCommonPKGModule.Instance.AddToastStr("看完广告后才能提示下一步");
+                    Debug.LogWarning($"[PuzzleMainView] 激励视频未完成，不能执行下一步: {error}");
+                });
+#else
+            DoNextStepAfterAd();
+#endif
+        }
+
+        private bool IsRewardedAdUnavailable(string error)
+        {
+            if (string.IsNullOrEmpty(error))
+                return false;
+
+            string lowerError = error.ToLower();
+            return lowerError.Contains("no advertisement")
+                   || lowerError.Contains("no ad")
+                   || lowerError.Contains("no_ads")
+                   || lowerError.Contains("ad unit")
+                   || lowerError.Contains("广告")
+                   || lowerError.Contains("暂无");
+        }
+
+        private bool HasNextStep()
+        {
+            if (mPuzzleList == null)
+                return false;
+
+            foreach (var item in mPuzzleList)
+            {
+                var btnGo = GetChild(item.Id.ToString());
+                var btnGo_icon = GetChildByPath($"{item.Id}.icon");
+                if (!btnGo.data.Equals(btnGo_icon.data))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void DoNextStepAfterAd()
         {
             // 收集所有未正确放置的拼图块
             var notPlacedList = new List<GObject>();

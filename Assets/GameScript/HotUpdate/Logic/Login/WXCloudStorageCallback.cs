@@ -68,6 +68,25 @@ public class WXCloudStorageCallback : MonoBehaviour
         WXCloudStorageManager.Instance.OnCloudIntValueLocalDataLoaded(value);
     }
 
+    public void OnRewardedVideoAdFinished(string msg)
+    {
+        Debug.Log($"[WXCloudStorageCallback] 激励视频广告完成: {msg}");
+        WXCloudStorageManager.Instance.OnRewardedVideoAdFinished(msg);
+    }
+
+    public void OnRewardedVideoAdFailed(string error)
+    {
+        if (!string.IsNullOrEmpty(error) && error.ToLower().Contains("no advertisement"))
+        {
+            Debug.LogWarning($"[WXCloudStorageCallback] 激励视频暂无广告: {error}");
+        }
+        else
+        {
+            Debug.LogError($"[WXCloudStorageCallback] 激励视频广告失败: {error}");
+        }
+        WXCloudStorageManager.Instance.OnRewardedVideoAdFailed(error);
+    }
+
     public void OnCloudDbLoaded(string value)
     {
         Debug.Log($"[WXCloudStorageCallback] 云数据库加载成功: {value}");

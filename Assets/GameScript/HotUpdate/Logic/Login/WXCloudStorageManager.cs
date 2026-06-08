@@ -36,6 +36,10 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     // 可加减 int 值变更事件（UI 或测试按钮可监听刷新）
     public event Action<int> OnCloudIntValueChanged;
 
+    // 激励视频广告回调
+    private Action _rewardedVideoSuccessCallback;
+    private Action<string> _rewardedVideoFailCallback;
+
     protected override void OnInit()
     {
         base.OnInit();
@@ -110,6 +114,19 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         int nextValue = Mathf.Max(0, GetCloudIntValue() - delta);
         SetCloudIntValue(nextValue);
         return _currentCloudIntValue;
+    }
+
+    /// <summary>
+    /// 播放微信激励视频广告，完整看完后执行 successCallback
+    /// </summary>
+    public void ShowRewardedVideoAd(string adUnitId, Action successCallback, Action<string> failCallback = null)
+    {
+        _rewardedVideoSuccessCallback = successCallback;
+        _rewardedVideoFailCallback = failCallback;
+
+        WXCloudStorageCallback.EnsureCreated();
+        WXCloudStorageNative.ShowRewardedVideoAd(adUnitId);
+        Debuger.Log($"[WXCloudStorage] 请求播放激励视频广告: {adUnitId}");
     }
 
     /// <summary>
@@ -300,6 +317,24 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
 
         SaveMergedCloudIntValue(wxLocalValue, false);
         Debuger.Log($"[WXCloudStorage] 微信本地 CloudIntValue: {wxLocalValue}");
+    }
+
+    public void OnRewardedVideoAdFinished(string msg)
+    {
+        Debuger.Log($"[WXCloudStorage] 激励视频广告完成: {msg}");
+        var callback = _rewardedVideoSuccessCallback;
+        _rewardedVideoSuccessCallback = null;
+        _rewardedVideoFailCallback = null;
+        callback?.Invoke();
+    }
+
+    public void OnRewardedVideoAdFailed(string error)
+    {
+        Debuger.LogError($"[WXCloudStorage] 激励视频广告失败/未完整观看: {error}");
+        var callback = _rewardedVideoFailCallback;
+        _rewardedVideoSuccessCallback = null;
+        _rewardedVideoFailCallback = null;
+        callback?.Invoke(error);
     }
 
     public void OnCloudDbDataLoaded(string value)

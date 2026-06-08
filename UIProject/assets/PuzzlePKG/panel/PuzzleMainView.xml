@@ -39,10 +39,10 @@
       <relation target="n99_t16b" sidePair="left-left,top-top"/>
     </group>
     <text id="n213_ijm7" name="yesTxt" xy="169,13" size="205,46" fontSize="30" vAlign="middle" autoSize="none" bold="true" text="已完成:0"/>
-    <component id="n216_ijm7" name="nextBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="407,6" size="135,44">
+    <component id="n216_ijm7" name="nextBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="407,6" size="135,44" visible="false">
       <Button title="完成下一个" titleFontSize="23" sound="ui://2r331opvu9ouh1"/>
     </component>
-    <component id="n215_ijm7" name="finishBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="617,6" size="135,44">
+    <component id="n215_ijm7" name="finishBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="617,6" size="135,44" visible="false">
       <Button title="GM全完成" titleFontSize="24" sound="ui://2r331opvu9ouh1"/>
     </component>
   </displayList>

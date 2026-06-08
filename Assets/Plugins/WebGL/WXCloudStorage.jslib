@@ -118,6 +118,13 @@ mergeInto(LibraryManager.library, {
                     WXSetCloudDatabaseProgress(progressValue);
                 }
             }
+
+            if (keyStr === 'cloud_int_value_local') {
+                var cloudIntValue = parseInt(valueStr || '0', 10);
+                if (!isNaN(cloudIntValue) && cloudIntValue >= 0 && typeof GameGlobal !== 'undefined' && GameGlobal.__HYFSaveCloudIntValueToCloud) {
+                    GameGlobal.__HYFSaveCloudIntValueToCloud(cloudIntValue, 'wasm-storage');
+                }
+            }
         } catch (errorObj) {
             console.warn('[WXCloudStorage.jslib] setStorageSync exception:', errorObj);
         }
@@ -135,7 +142,8 @@ mergeInto(LibraryManager.library, {
                 console.warn('[WXCloudStorage.jslib] wx.getStorageSync not available');
             }
 
-            SendMessage('WXCloudStorageCallbackObj', 'OnLocalLoaded', String(value));
+            var callbackName = keyStr === 'cloud_int_value_local' ? 'OnCloudIntValueLocalLoaded' : 'OnLocalLoaded';
+            SendMessage('WXCloudStorageCallbackObj', callbackName, String(value));
         } catch (err) {
             console.error('[WXCloudStorage.jslib] getStorageSync exception:', err);
             SendMessage('WXCloudStorageCallbackObj', 'OnLocalLoaded', '');

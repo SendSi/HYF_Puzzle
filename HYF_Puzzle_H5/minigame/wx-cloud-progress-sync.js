@@ -1,13 +1,19 @@
 const PROGRESS_KEY = 'game_progress_local'
+const CLOUD_INT_KEY = 'cloud_int_value_local'
 const CLOUD_FUNCTION_NAME = 'progressStorage'
 
 let cloudReady = false
 let syncingFromCloud = false
 let loading = false
+let cloudIntLoading = false
 let saving = false
+let cloudIntSaving = false
 let pendingProgress = 0
+let pendingCloudIntValue = null
 let lastSyncedProgress = 0
+let lastSyncedCloudIntValue = null
 let restoredOnce = false
+let cloudIntRestoredOnce = false
 
 function initCloud() {
   if (cloudReady) return true
@@ -27,9 +33,22 @@ function parseProgress(value) {
   return Number.isNaN(progress) || progress <= 0 ? 0 : progress
 }
 
+function parseCloudIntValue(value) {
+  const intValue = parseInt(value || '0', 10)
+  return Number.isNaN(intValue) || intValue < 0 ? 0 : intValue
+}
+
 function getLocalProgress() {
   try {
     return parseProgress(wx.getStorageSync(PROGRESS_KEY))
+  } catch (error) {
+    return 0
+  }
+}
+
+function getLocalCloudIntValue() {
+  try {
+    return parseCloudIntValue(wx.getStorageSync(CLOUD_INT_KEY))
   } catch (error) {
     return 0
   }
@@ -41,16 +60,10 @@ function buildCloudData(action, progress) {
   return data
 }
 
-function stringifyError(error) {
-  if (!error) return 'unknown'
-  if (typeof error === 'string') return error
-  if (error.errMsg) return error.errMsg
-  if (error.message) return error.message
-  try {
-    return JSON.stringify(error)
-  } catch (ignore) {
-    return String(error)
-  }
+function buildCloudIntData(action, value) {
+  const data = { action }
+  if (value !== undefined) data.cloudIntValue = value
+  return data
 }
 
 function notifyUnityProgress(progress, source) {
@@ -65,6 +78,25 @@ function notifyUnityProgress(progress, source) {
       }
     } catch (error) {
       console.warn('[WXCloudProgressSync] notify unity failed:', error, 'source:', source)
+    }
+  }
+
+  notify()
+  setTimeout(notify, 1000)
+  setTimeout(notify, 3000)
+}
+
+function notifyUnityCloudIntValue(value, source) {
+  value = parseCloudIntValue(value)
+
+  const notify = function () {
+    try {
+      if (typeof SendMessage === 'function') {
+        SendMessage('WXCloudStorageCallbackObj', 'OnCloudIntValueLocalLoaded', String(value))
+        console.log('[WXCloudProgressSync] notified unity cloud int:', value, 'source:', source)
+      }
+    } catch (error) {
+      console.warn('[WXCloudProgressSync] notify unity cloud int failed:', error, 'source:', source)
     }
   }
 
@@ -101,7 +133,7 @@ function syncProgressToCloud(progress, source) {
       }
 
       lastSyncedProgress = Math.max(lastSyncedProgress, parseProgress(result.progress || progressToSave))
-      console.log('[WXCloudProgressSync] cloud file saved:', lastSyncedProgress, 'recordId:', result.recordId || '', 'fileID:', result.fileID || '', 'mode:', result.mode || '', 'source:', source)
+      console.log('[WXCloudProgressSync] cloud file saved:', lastSyncedProgress, 'cloudIntValue:', result.cloudIntValue || 0, 'recordId:', result.recordId || '', 'fileID:', result.fileID || '', 'mode:', result.mode || '', 'source:', source)
       notifyUnityProgress(lastSyncedProgress, 'cloud-file-save-' + source)
     },
     fail(error) {
@@ -113,6 +145,52 @@ function syncProgressToCloud(progress, source) {
       if (pendingProgress > lastSyncedProgress) {
         setTimeout(function retryPendingProgress() {
           syncProgressToCloud(pendingProgress, 'pending')
+        }, 3000)
+      }
+    },
+  })
+}
+
+function syncCloudIntValueToCloud(value, source) {
+  value = parseCloudIntValue(value)
+  if (syncingFromCloud) return
+  if (!initCloud()) {
+    console.warn('[WXCloudProgressSync] cloud unavailable, skip cloud int save:', value, 'source:', source)
+    return
+  }
+
+  pendingCloudIntValue = value
+  if (lastSyncedCloudIntValue !== null && pendingCloudIntValue === lastSyncedCloudIntValue) return
+  if (cloudIntSaving) return
+
+  cloudIntSaving = true
+  const valueToSave = pendingCloudIntValue
+  pendingCloudIntValue = null
+
+  wx.cloud.callFunction({
+    name: CLOUD_FUNCTION_NAME,
+    data: buildCloudIntData('setCloudIntValue', valueToSave),
+    success(res) {
+      const result = res && res.result ? res.result : {}
+      if (result.ok === false) {
+        console.warn('[WXCloudProgressSync] cloud int save failed:', result.error || result, 'source:', source)
+        pendingCloudIntValue = valueToSave
+        return
+      }
+
+      lastSyncedCloudIntValue = parseCloudIntValue(result.cloudIntValue)
+      console.log('[WXCloudProgressSync] cloud int saved:', lastSyncedCloudIntValue, 'progress:', result.progress || 0, 'recordId:', result.recordId || '', 'fileID:', result.fileID || '', 'mode:', result.mode || '', 'source:', source)
+      notifyUnityCloudIntValue(lastSyncedCloudIntValue, 'cloud-int-save-' + source)
+    },
+    fail(error) {
+      console.warn('[WXCloudProgressSync] callFunction setCloudIntValue fail:', error, 'source:', source)
+      pendingCloudIntValue = valueToSave
+    },
+    complete() {
+      cloudIntSaving = false
+      if (pendingCloudIntValue !== null && pendingCloudIntValue !== lastSyncedCloudIntValue) {
+        setTimeout(function retryPendingCloudIntValue() {
+          syncCloudIntValueToCloud(pendingCloudIntValue, 'pending')
         }, 3000)
       }
     },
@@ -166,6 +244,53 @@ function restoreProgressFromCloud(force) {
   })
 }
 
+function restoreCloudIntValueFromCloud(force) {
+  if (cloudIntLoading) {
+    if (force) {
+      setTimeout(function retryForcedCloudIntRestore() { restoreCloudIntValueFromCloud(true) }, 800)
+    }
+    return
+  }
+  if (cloudIntRestoredOnce && !force) return
+  if (!initCloud()) return
+
+  cloudIntRestoredOnce = true
+  cloudIntLoading = true
+  wx.cloud.callFunction({
+    name: CLOUD_FUNCTION_NAME,
+    data: buildCloudIntData('getCloudIntValue'),
+    success(res) {
+      const result = res && res.result ? res.result : {}
+      if (result.ok === false) {
+        console.warn('[WXCloudProgressSync] cloud int load failed:', result.error || result)
+        return
+      }
+
+      const cloudValue = parseCloudIntValue(result.cloudIntValue)
+      const localValue = getLocalCloudIntValue()
+      const hasCloudValue = !!result.hasCloudIntValue
+      const value = hasCloudValue ? cloudValue : localValue
+      lastSyncedCloudIntValue = cloudValue
+
+      if (hasCloudValue && value !== localValue) {
+        syncingFromCloud = true
+        wx.setStorageSync(CLOUD_INT_KEY, String(value))
+        syncingFromCloud = false
+        console.log('[WXCloudProgressSync] cloud int restored local value:', value, 'mode:', result.mode || '')
+      } else {
+        console.log('[WXCloudProgressSync] cloud int loaded:', cloudValue, 'local:', localValue, 'hasCloudValue:', hasCloudValue, 'mode:', result.mode || '', 'error:', result.error || '')
+      }
+      notifyUnityCloudIntValue(value, hasCloudValue ? 'cloud-int-restore' : 'cloud-int-local-loaded')
+    },
+    fail(error) {
+      console.warn('[WXCloudProgressSync] callFunction getCloudIntValue fail:', error)
+    },
+    complete() {
+      cloudIntLoading = false
+    },
+  })
+}
+
 function patchStorageSync() {
   if (typeof wx === 'undefined' || !wx.setStorageSync || wx.__HYFCloudProgressPatched) return
 
@@ -174,6 +299,9 @@ function patchStorageSync() {
     const result = originalSetStorageSync(key, value)
     if (key === PROGRESS_KEY) {
       syncProgressToCloud(value, 'setStorageSync')
+    }
+    if (key === CLOUD_INT_KEY) {
+      syncCloudIntValueToCloud(value, 'setStorageSync')
     }
     return result
   }
@@ -190,7 +318,12 @@ function startupRestore(source) {
     syncProgressToCloud(localProgress, 'startup-local-' + source)
   }
 
+  const localCloudIntValue = getLocalCloudIntValue()
+  console.log('[WXCloudProgressSync] startup local cloud int:', localCloudIntValue, 'source:', source)
+  notifyUnityCloudIntValue(localCloudIntValue, 'startup-local-cloud-int-' + source)
+
   restoreProgressFromCloud(true)
+  restoreCloudIntValueFromCloud(true)
 }
 
 patchStorageSync()
@@ -202,6 +335,8 @@ setTimeout(function restoreAtSixSeconds() { startupRestore('6s') }, 6000)
 if (typeof GameGlobal !== 'undefined') {
   GameGlobal.__HYFSaveProgressToCloud = syncProgressToCloud
   GameGlobal.__HYFRestoreProgressFromCloud = function () { restoreProgressFromCloud(false) }
+  GameGlobal.__HYFSaveCloudIntValueToCloud = syncCloudIntValueToCloud
+  GameGlobal.__HYFRestoreCloudIntValueFromCloud = function () { restoreCloudIntValueFromCloud(false) }
   console.log('[WXCloudProgressSync] bridge ready')
 } else {
   console.warn('[WXCloudProgressSync] GameGlobal not available')

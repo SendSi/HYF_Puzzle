@@ -10,8 +10,11 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
 {
     // 本地缓存（作为微信云存储的备份/快速读取）
     private const string LOCAL_PROGRESS_KEY = "GameProgress";
+    private const string LOCAL_CLOUD_INT_KEY = "CloudIntValue";
     private const string CLOUD_SYNC_TIME_KEY = "CloudSyncTime";
+    private const string CLOUD_INT_SYNC_TIME_KEY = "CloudIntValueSyncTime";
     private const string WX_LOCAL_PROGRESS_KEY = "game_progress_local";
+    private const string WX_LOCAL_CLOUD_INT_KEY = "cloud_int_value_local";
     private const string WX_CLOUD_ENV_ID = "";
     private const string WX_CLOUD_COLLECTION = "user_game_progress";
 
@@ -19,12 +22,19 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     private int _currentProgress = 0;
     public int CurrentProgress => _currentProgress;
 
+    // 可加减的云端 int 值
+    private int _currentCloudIntValue = 0;
+    public int CurrentCloudIntValue => _currentCloudIntValue;
+
     // 云端数据是否已加载完毕
     private bool _cloudDataLoaded = false;
     public bool CloudDataLoaded => _cloudDataLoaded;
 
     // 云端进度变更事件（UI 监听刷新）
     public event Action<int> OnProgressChanged;
+
+    // 可加减 int 值变更事件（UI 或测试按钮可监听刷新）
+    public event Action<int> OnCloudIntValueChanged;
 
     protected override void OnInit()
     {
@@ -65,6 +75,44 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     }
 
     /// <summary>
+    /// 获取可加减的云端 int 值
+    /// </summary>
+    public int GetCloudIntValue()
+    {
+        int localValue = PlayerPrefsHelper.GetInteger(LOCAL_CLOUD_INT_KEY, 0);
+        _currentCloudIntValue = localValue;
+        return _currentCloudIntValue;
+    }
+
+    /// <summary>
+    /// 设置并保存可加减的云端 int 值
+    /// </summary>
+    public void SetCloudIntValue(int value)
+    {
+        SaveMergedCloudIntValue(Mathf.Max(0, value), true);
+    }
+
+    /// <summary>
+    /// 增加可加减的云端 int 值
+    /// </summary>
+    public int AddCloudIntValue(int delta = 1)
+    {
+        int nextValue = GetCloudIntValue() + delta;
+        SetCloudIntValue(nextValue);
+        return _currentCloudIntValue;
+    }
+
+    /// <summary>
+    /// 减少可加减的云端 int 值，默认不低于 0
+    /// </summary>
+    public int ReduceCloudIntValue(int delta = 1)
+    {
+        int nextValue = Mathf.Max(0, GetCloudIntValue() - delta);
+        SetCloudIntValue(nextValue);
+        return _currentCloudIntValue;
+    }
+
+    /// <summary>
     /// 从微信云端加载进度（启动时调用）
     /// </summary>
     public void LoadProgressFromCloud()
@@ -75,9 +123,13 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
             _currentProgress = localProgress;
         }
 
-        GetFromWXLocal();
+        int localCloudIntValue = PlayerPrefsHelper.GetInteger(LOCAL_CLOUD_INT_KEY, 0);
+        _currentCloudIntValue = localCloudIntValue;
 
-        Debuger.Log($"[WXCloudStorage] 当前本地进度: {_currentProgress}");
+        GetFromWXLocal();
+        GetFromWXLocalCloudIntValue();
+
+        Debuger.Log($"[WXCloudStorage] 当前本地进度: {_currentProgress}，CloudIntValue: {_currentCloudIntValue}");
     }
 
     #endregion
@@ -138,6 +190,17 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         WXCloudStorageNative.GetStorageSync(WX_LOCAL_PROGRESS_KEY);
     }
 
+    private void SaveToWXLocalCloudIntValue(int value)
+    {
+        WXCloudStorageNative.SetStorageSync(WX_LOCAL_CLOUD_INT_KEY, value.ToString());
+        Debuger.Log($"[WXCloudStorage] 正在保存到微信本地 CloudIntValue: {value}");
+    }
+
+    private void GetFromWXLocalCloudIntValue()
+    {
+        WXCloudStorageNative.GetStorageSync(WX_LOCAL_CLOUD_INT_KEY);
+    }
+
     private void SaveMergedProgress(int progress, bool syncWX)
     {
         if (progress <= 0)
@@ -156,6 +219,28 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         if (changed)
         {
             OnProgressChanged?.Invoke(_currentProgress);
+        }
+    }
+
+    private void SaveMergedCloudIntValue(int value, bool syncWX)
+    {
+        value = Mathf.Max(0, value);
+        bool changed = _currentCloudIntValue != value;
+        _currentCloudIntValue = value;
+
+        PlayerPrefsHelper.SetInteger(LOCAL_CLOUD_INT_KEY, value);
+        PlayerPrefsHelper.SetDateTime(CLOUD_INT_SYNC_TIME_KEY, DateTime.Now);
+
+        if (syncWX)
+        {
+            SaveToWXLocalCloudIntValue(value);
+        }
+
+        Debuger.Log($"[WXCloudStorage] 当前 CloudIntValue: {value}");
+
+        if (changed)
+        {
+            OnCloudIntValueChanged?.Invoke(_currentCloudIntValue);
         }
     }
 
@@ -204,6 +289,17 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
             SaveMergedProgress(maxProgress, true);
             Debuger.Log($"[WXCloudStorage] 微信本地进度，本地:{localProgress} 微信:{wxLocalProgress} 当前:{maxProgress}");
         }
+    }
+
+    public void OnCloudIntValueLocalDataLoaded(string value)
+    {
+        if (string.IsNullOrEmpty(value) || !int.TryParse(value, out int wxLocalValue))
+        {
+            return;
+        }
+
+        SaveMergedCloudIntValue(wxLocalValue, false);
+        Debuger.Log($"[WXCloudStorage] 微信本地 CloudIntValue: {wxLocalValue}");
     }
 
     public void OnCloudDbDataLoaded(string value)

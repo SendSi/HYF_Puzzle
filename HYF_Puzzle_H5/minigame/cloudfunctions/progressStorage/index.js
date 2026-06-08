@@ -3,6 +3,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const PROGRESS_KEY = 'game_progress'
+const CLOUD_INT_KEY = 'cloud_int_value'
 
 exports.main = async (event = {}) => {
   const wxContext = cloud.getWXContext()
@@ -13,7 +14,7 @@ exports.main = async (event = {}) => {
   const userId = getUserId(openid)
 
   if (!userId) {
-    return { ok: false, progress: 0, env, appid, error: 'missing user id' }
+    return { ok: false, progress: 0, cloudIntValue: 0, env, appid, error: 'missing user id' }
   }
 
   try {
@@ -26,11 +27,21 @@ exports.main = async (event = {}) => {
       return await setProgress(userId, Number.isNaN(incomingProgress) ? 0 : incomingProgress, env, { openid, appid, unionid })
     }
 
-    return { ok: false, progress: 0, env, error: 'unknown action' }
+    if (event.action === 'getCloudIntValue') {
+      return await getCloudIntValue(userId, env)
+    }
+
+    if (event.action === 'setCloudIntValue') {
+      const incomingValue = parseInt(event.cloudIntValue || 0, 10)
+      return await setCloudIntValue(userId, Number.isNaN(incomingValue) ? 0 : incomingValue, env, { openid, appid, unionid })
+    }
+
+    return { ok: false, progress: 0, cloudIntValue: 0, env, error: 'unknown action' }
   } catch (error) {
     return {
       ok: false,
       progress: 0,
+      cloudIntValue: 0,
       env,
       error: getErrorMessage(error),
     }
@@ -56,8 +67,7 @@ function getDetectedFileIDCandidates(prefix, cloudPath) {
   return prefix ? [prefix + cloudPath] : []
 }
 
-async function getProgress(userId, env) {
-  const recordId = getProgressDocId(userId)
+async function readProgressRecord(userId, env) {
   const cloudPath = getProgressCloudPath(userId)
   const errors = []
   const detectedPrefix = await getDetectedFileIDPrefix(userId)
@@ -72,54 +82,91 @@ async function getProgress(userId, env) {
       const file = await cloud.downloadFile({ fileID })
       const text = file && file.fileContent ? file.fileContent.toString('utf8') : ''
       const data = text ? JSON.parse(text) : {}
-      const progress = getRecordProgress(data)
-
-      return {
-        ok: true,
-        progress,
-        env,
-        count: progress > 0 ? 1 : 0,
-        recordId,
-        cloudPath,
-        detectedPrefix,
-        fileID,
-        mode: 'cloud-file.download',
-      }
+      return { data, detectedPrefix, fileID, errors, found: true }
     } catch (error) {
       errors.push(`${fileID}: ${getErrorMessage(error)}`)
+    }
+  }
+
+  return { data: {}, detectedPrefix, fileID: candidates[0] || '', errors, found: false }
+}
+
+async function getProgress(userId, env) {
+  const recordId = getProgressDocId(userId)
+  const cloudPath = getProgressCloudPath(userId)
+  const record = await readProgressRecord(userId, env)
+  const progress = getRecordProgress(record.data)
+  const cloudIntValue = getRecordCloudIntValue(record.data)
+
+  if (record.found) {
+    return {
+      ok: true,
+      progress,
+      cloudIntValue,
+      hasCloudIntValue: hasRecordCloudIntValue(record.data),
+      env,
+      count: progress > 0 ? 1 : 0,
+      recordId,
+      cloudPath,
+      detectedPrefix: record.detectedPrefix,
+      fileID: record.fileID,
+      mode: 'cloud-file.download',
     }
   }
 
   return {
     ok: true,
     progress: 0,
+    cloudIntValue: 0,
+    hasCloudIntValue: false,
     env,
     count: 0,
     recordId,
     cloudPath,
-    detectedPrefix,
-    fileID: candidates[0] || '',
+    detectedPrefix: record.detectedPrefix,
+    fileID: record.fileID,
     mode: 'cloud-file-empty',
-    error: errors.join(' | '),
+    error: record.errors.join(' | '),
+  }
+}
+
+async function getCloudIntValue(userId, env) {
+  const result = await getProgress(userId, env)
+  return {
+    ...result,
+    count: result.hasCloudIntValue ? 1 : 0,
+    mode: result.mode === 'cloud-file.download' ? 'cloud-file.cloud-int-download' : result.mode,
   }
 }
 
 async function setProgress(userId, incomingProgress, env, context = {}) {
   if (incomingProgress <= 0) {
-    return { ok: true, progress: 0, env, saved: false, recordId: getProgressDocId(userId) }
+    return { ok: true, progress: 0, cloudIntValue: 0, env, saved: false, recordId: getProgressDocId(userId) }
   }
 
+  return await writeMergedRecord(userId, env, context, { progress: incomingProgress })
+}
+
+async function setCloudIntValue(userId, incomingValue, env, context = {}) {
+  const cloudIntValue = Math.max(0, incomingValue)
+  return await writeMergedRecord(userId, env, context, { cloudIntValue })
+}
+
+async function writeMergedRecord(userId, env, context, patch) {
   const recordId = getProgressDocId(userId)
   const cloudPath = getProgressCloudPath(userId)
+  const existing = await readProgressRecord(userId, env)
   const data = {
+    ...existing.data,
     key: PROGRESS_KEY,
+    cloudIntKey: CLOUD_INT_KEY,
     userId,
     openid: context.openid || userId,
     appid: context.appid || '',
     unionid: context.unionid || '',
     recordId,
-    progress: incomingProgress,
     updatedAt: Date.now(),
+    ...patch,
   }
 
   const uploadResult = await cloud.uploadFile({
@@ -129,7 +176,9 @@ async function setProgress(userId, incomingProgress, env, context = {}) {
 
   return {
     ok: true,
-    progress: incomingProgress,
+    progress: getRecordProgress(data),
+    cloudIntValue: getRecordCloudIntValue(data),
+    hasCloudIntValue: hasRecordCloudIntValue(data),
     env,
     appid: context.appid || '',
     saved: true,
@@ -171,6 +220,16 @@ function getRecordProgress(record) {
   if (!record) return 0
   const progress = parseInt(record.progress || 0, 10)
   return Number.isNaN(progress) ? 0 : progress
+}
+
+function hasRecordCloudIntValue(record) {
+  return !!record && Object.prototype.hasOwnProperty.call(record, 'cloudIntValue')
+}
+
+function getRecordCloudIntValue(record) {
+  if (!record || !hasRecordCloudIntValue(record)) return 0
+  const cloudIntValue = parseInt(record.cloudIntValue || 0, 10)
+  return Number.isNaN(cloudIntValue) || cloudIntValue < 0 ? 0 : cloudIntValue
 }
 
 function dedupe(list) {

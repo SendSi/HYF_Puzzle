@@ -8,14 +8,14 @@
     <image id="n51_kw1g" name="bg" src="y3wt1ygcgrt" fileName="image/load.png" xy="-168,0">
       <relation target="" sidePair="width-width,height-height"/>
     </image>
-    <text id="n36_qg41" name="topDescTxt" xy="252,85" pivot="0.5,0.5" size="840,73" font="ui://2r331opvno3vhz9d63" fontSize="55" color="#ffffff" align="center" ubb="true" autoSize="height" strokeColor="#333333" text="资源更新">
+    <text id="n36_qg41" name="topDescTxt" xy="252,85" pivot="0.5,0.5" size="840,73" fontSize="55" color="#ffffff" align="center" ubb="true" autoSize="height" strokeColor="#333333" text="资源更新">
       <relation target="" sidePair="center-center,top-top"/>
     </text>
     <component id="n44_swm2" name="slider" src="swm23" fileName="component/hotProgress.xml" xy="210,651" size="934,32">
       <relation target="" sidePair="center-center,bottom-bottom"/>
       <ProgressBar max="100"/>
     </component>
-    <text id="n46_swm2" name="tips" xy="247,592" pivot="0.5,0.5" size="840,60" font="ui://2r331opvno3vhz9d63" fontSize="30" color="#ffffff" align="center" vAlign="bottom" ubb="true" autoSize="none" strokeColor="#333333" shadowColor="#333333" shadowOffset="0,1" text="描述">
+    <text id="n46_swm2" name="tips" xy="247,590" pivot="0.5,0.5" size="840,60" fontSize="30" color="#ffffff" align="center" vAlign="bottom" ubb="true" autoSize="none" strokeColor="#333333" shadowColor="#333333" shadowOffset="0,1" text="描述">
       <relation target="" sidePair="center-center,bottom-bottom"/>
     </text>
     <image id="n52_zo6m" name="dialogBg" src="zo6m1ygcgrs" fileName="image/dialog.png" xy="297,93" pivot="0.5,0.5" size="778,572" group="n49_pf2g">

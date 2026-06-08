@@ -70,7 +70,7 @@ public class FGUILoader : Singleton<FGUILoader>
         mLoadedPKG[pkgName] = tUIPackage; //加入字典
         TryAddHandles(pkgName, handle);
 
-        //Debuger.LogWarning("加入_业务包:" + pkgName);
+        // Debuger.LogWarning("加入_业务包:" + pkgName);
         var pkgDeep = GetDependencies(tUIPackage); //获得  此包的 依赖包   名字s
         await LoadDependencies(pkgDeep, finishCB); //加载依赖包
     }

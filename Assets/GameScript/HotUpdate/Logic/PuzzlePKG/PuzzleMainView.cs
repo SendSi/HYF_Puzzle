@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace PuzzlePKG
 {
-    // public enum 
-
-
     public partial class PuzzleMainView : GComponent
     {
         private List<PuzzleConfig> mPuzzleList;
@@ -99,24 +96,10 @@ namespace PuzzlePKG
         }
 
 
-        /// <summary>
-        /// 从 urlIcon 中解析包名，如 "ui://Map_10/map" → "Map_10"
-        /// </summary>
-        private string GetPkgNameFromUrl(string url)
-        {
-            if (string.IsNullOrEmpty(url)) return "";
-            // 格式: ui://包名/资源名
-            int start = url.IndexOf("//") + 2;
-            int end = url.LastIndexOf('/');
-            if (start >= 2 && end > start)
-                return url.Substring(start, end - start);
-            return "";
-        }
-
         private void SetImageTask(PuzzleMapConfig levelCfg)
         {
             // 从 urlIcon 解析包名，如 "ui://Map_10/map" → "Map_10"
-            string pkgName = GetPkgNameFromUrl(levelCfg.UrlIcon);
+            string pkgName = PuzzleManager.Instance.GetPkgNameFromUrl(levelCfg.UrlIcon);
             Debug.Log($"[PuzzleMainView] 加载图片包: {pkgName}, url: {levelCfg.UrlIcon}");
 
             // 只加载当前关卡对应的那个小包，加载完成后设置所有图片
@@ -145,22 +128,11 @@ namespace PuzzlePKG
         /// </summary>
         private void LoadLevelImage()
         {
-            var mapCfg = CfgLubanMgr.Instance.globalTab.TbPuzzleMapConfig.DataList;
-            PuzzleMapConfig levelCfg = null;
-            foreach (var cfg in mapCfg)
-            {
-                if (cfg.Task == _currentLevel)
-                {
-                    levelCfg = cfg;
-                    break;
-                }
-            }
-
+            PuzzleMapConfig levelCfg = PuzzleManager.Instance.GetLevelMapCfg(_currentLevel);
             if (levelCfg != null && !string.IsNullOrEmpty(levelCfg.UrlIcon))
             {
                 _currentIconUrl = levelCfg.UrlIcon;
                 // 设置背景大图
-                // _iconBg.url = _currentIconUrl;
                 SetImageTask(levelCfg);
                 Debug.Log($"[PuzzleMainView] 加载第{_currentLevel}关图片: {_currentIconUrl}");
             }

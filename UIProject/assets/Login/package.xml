@@ -52,7 +52,6 @@
     <image id="usrj2o" name="com_btn_01.png" path="/images/" exported="true"/>
     <image id="usrj2p" name="com_btn_02.png" path="/images/" exported="true"/>
     <component id="v4de2q" name="start.xml" path="/components/" exported="true"/>
-    <component id="v4de34" name="GameNoticeView.xml" path="/panel/" exported="true"/>
     <image id="mpc835" name="bg.png" path="/images/" exported="true"/>
     <image id="mpc836" name="btn_bg_service.png" path="/images/" exported="true"/>
     <image id="mpc837" name="land_bg11.png" path="/images/" exported="true"/>

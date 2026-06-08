@@ -1,12 +1,10 @@
+using Cysharp.Threading.Tasks;
 using FairyGUI;
 
 namespace Login
 {
     public partial class LoginMainView : GComponent
     {
-        private EffectObject effObject1;
-        private int _currComValue = 0;
-
         public override void OnInit()
         {
             base.OnInit();
@@ -16,7 +14,6 @@ namespace Login
 
             this._ageBtn.onClick.Set(OnClickAgeBtn);
             this._startGame.onClick.Set(OnClickMapBtn1);
-
 
             // 初始化时显示进度（先从本地读，等云端回调回来再更新）
             int savedProgress = WXCloudStorageManager.Instance.GetProgress();
@@ -28,25 +25,12 @@ namespace Login
 
             this._btn_progress.onClick.Set(OnClickProgressBtn);
 
-            // 简体中文SimChinese  繁体中文TraChinese  英文English 
-            if (AppConfig.currLang == "SimChinese")
-            {
-                _currComValue = 0;
-            }
-            else if (AppConfig.currLang == "TraChinese")
-            {
-                _currComValue = 1;
-            }
-            else if (AppConfig.currLang == "English")
-            {
-                _currComValue = 2;
-            }
-
 #if UNITY_EDITOR
             _btn_progress.visible = true;
 #else
             _btn_progress.visible = false;
 #endif
+            CheckNextLv(savedProgress);
         }
 
         //上传服务端器 第5关
@@ -54,7 +38,6 @@ namespace Login
         {
             SaveProgressToCloud(5);
         }
-
 
 
         /// <summary>
@@ -65,6 +48,8 @@ namespace Login
             if (level <= 0) level = 1;
             this._title_progress.text = $"当前进度是:{level}";
             Debuger.Log($"[LoginMainView] 云端进度已刷新: 第{level}关");
+
+            CheckNextLv(level);
         }
 
         /// <summary>
@@ -81,14 +66,35 @@ namespace Login
             // 显示提示
             ProxyCommonPKGModule.Instance.AddToastStr($"第{level}关进度已保存");
 
+            CheckNextLv(level);
+
             Debuger.Log($"[LoginMainView] 进度已保存: 第{level}关");
         }
 
-        private void OnClickMapBtn1()
+        private async void OnClickMapBtn1()
         {
             int level = WXCloudStorageManager.Instance.GetProgress();
             if (level <= 0) level = 1;
-            ProxyPuzzlePKGModule.Instance.OpenPuzzleMainView(level);
+            var isCan = await CheckNextLv(level);
+            if (isCan)
+            {
+                ProxyPuzzlePKGModule.Instance.OpenPuzzleMainView(level);
+            }
+        }
+
+        private async UniTask<bool> CheckNextLv(int currLv, int deleyTime = 500)
+        {
+            await UniTask.Delay(deleyTime);
+
+            var levelCfg = PuzzleManager.Instance.GetLevelMapCfg(currLv);
+            if (levelCfg != null)
+            {
+                var pkgName = PuzzleManager.Instance.GetPkgNameFromUrl(levelCfg.UrlIcon);
+                FGUILoader.Instance.AddPackage(pkgName, null);
+                return true;
+            }
+
+            return false;
         }
 
         private void OnClickAgeBtn()

@@ -197,7 +197,6 @@
     <component id="evvi1ygcgq4" name="comItem_BottomName_btn.xml" path="/components/" exported="true"/>
     <component id="w5x51ygcgq6" name="SeasonItemView.xml" path="/components/" exported="true" favorite="true"/>
     <image id="ig901ygcg9n" name="btn_bg.png" path="/images/" exported="true" scale="9grid" scale9grid="9,10,111,26"/>
-    <component id="odfq1ygcgrr" name="Item_PropBag.xml" path="/components/" exported="true" favorite="true"/>
     <component id="g17g1ygcfn7" name="plot_btn2.xml" path="/images/"/>
     <component id="tixj1ygcg9p" name="ToastTipView.xml" path="/panel/" exported="true"/>
     <component id="tixj1ygcg9o" name="ToastItem.xml" path="/components/" exported="true"/>

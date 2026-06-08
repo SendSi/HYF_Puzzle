@@ -35,7 +35,6 @@ namespace Login
             UIObjectFactory.SetPackageItemExtension(list_clothes_04.URL, typeof(list_clothes_04));
             UIObjectFactory.SetPackageItemExtension(fold.URL, typeof(fold));
             UIObjectFactory.SetPackageItemExtension(start.URL, typeof(start));
-            UIObjectFactory.SetPackageItemExtension(GameNoticeView.URL, typeof(GameNoticeView));
         }
     }
 }

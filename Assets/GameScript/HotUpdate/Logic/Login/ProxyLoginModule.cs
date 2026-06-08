@@ -38,19 +38,7 @@ public class ProxyLoginModule : Singleton<ProxyLoginModule>,IProxy
 
     #endregion
 
-    #region GameNoticeView打开关闭Window
 
-    public void OpenGameNoticeViewWin()
-    {
-        CheckLoad(() => { UIMgr.Instance.OpenWindow<GameNoticeViewWin>(); });
-    }
-
-    public void CloseGameNoticeViewWin()
-    {
-        UIMgr.Instance.CloseWindow<GameNoticeViewWin>();
-    }
-
-    #endregion
 
   
 

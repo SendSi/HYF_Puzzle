@@ -31,6 +31,27 @@ public static class WXCloudStorageNative
     [System.Runtime.InteropServices.DllImport("__Internal")]
     private static extern void WXShowRewardedVideoAd(string adUnitId);
 
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXSaveProfile(string jsonProfile);
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXLoadProfile();
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXReportLevelClear(string jsonReport);
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXDailySignIn();
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXUseHint();
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXAddHint(int amount);
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern void WXLoadRankList();
+
     public static void SetUserCloudStorage(string jsonKVData)
     {
         WXSetUserCloudStorage(jsonKVData);
@@ -69,6 +90,41 @@ public static class WXCloudStorageNative
     public static void ShowRewardedVideoAd(string adUnitId)
     {
         WXShowRewardedVideoAd(adUnitId);
+    }
+
+    public static void SaveProfile(string jsonProfile)
+    {
+        WXSaveProfile(jsonProfile);
+    }
+
+    public static void LoadProfile()
+    {
+        WXLoadProfile();
+    }
+
+    public static void ReportLevelClear(string jsonReport)
+    {
+        WXReportLevelClear(jsonReport);
+    }
+
+    public static void DailySignIn()
+    {
+        WXDailySignIn();
+    }
+
+    public static void UseHint()
+    {
+        WXUseHint();
+    }
+
+    public static void AddHint(int amount)
+    {
+        WXAddHint(amount);
+    }
+
+    public static void LoadRankList()
+    {
+        WXLoadRankList();
     }
 #else
     public static void SetUserCloudStorage(string jsonKVData)
@@ -109,6 +165,41 @@ public static class WXCloudStorageNative
     public static void ShowRewardedVideoAd(string adUnitId)
     {
         Debug.Log($"[WXCloudStorageNative] Editor/Standalone mode, skip rewarded video ad: {adUnitId}");
+    }
+
+    public static void SaveProfile(string jsonProfile)
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip profile save.");
+    }
+
+    public static void LoadProfile()
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip profile load.");
+    }
+
+    public static void ReportLevelClear(string jsonReport)
+    {
+        Debug.Log($"[WXCloudStorageNative] Editor/Standalone mode, skip level clear report: {jsonReport}");
+    }
+
+    public static void DailySignIn()
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip daily sign in.");
+    }
+
+    public static void UseHint()
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip use hint.");
+    }
+
+    public static void AddHint(int amount)
+    {
+        Debug.Log($"[WXCloudStorageNative] Editor/Standalone mode, skip add hint: {amount}");
+    }
+
+    public static void LoadRankList()
+    {
+        Debug.Log("[WXCloudStorageNative] Editor/Standalone mode, skip rank list.");
     }
 #endif
 }

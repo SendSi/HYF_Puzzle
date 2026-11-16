@@ -68,6 +68,21 @@ public class WXCloudStorageCallback : MonoBehaviour
         WXCloudStorageManager.Instance.OnCloudIntValueLocalDataLoaded(value);
     }
 
+    /// <summary>
+    /// JS 调用: SendMessage('WXCloudStorageCallbackObj', 'OnProfileLoaded', '{...}')
+    /// </summary>
+    public void OnProfileLoaded(string value)
+    {
+        Debug.Log($"[WXCloudStorageCallback] 档案加载成功: {value}");
+        WXCloudStorageManager.Instance.OnProfileDataLoaded(value);
+    }
+
+    public void OnRankListLoaded(string value)
+    {
+        Debug.Log($"[WXCloudStorageCallback] 排行榜加载成功: {value}");
+        WXCloudStorageManager.Instance.OnRankListDataLoaded(value);
+    }
+
     public void OnRewardedVideoAdFinished(string msg)
     {
         Debug.Log($"[WXCloudStorageCallback] 激励视频广告完成: {msg}");

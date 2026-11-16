@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1100,64" opaque="true">
+  <displayList>
+    <graph id="s30_soc1" name="bg" xy="0,0" size="1100,64" type="rect" lineSize="0" fillColor="#ff1b2a45" corner="6" touchable="false"/>
+    <text id="s31_soc1" name="nameText" xy="16,8" size="260,48" fontSize="22" color="#ffffffff" align="left" vAlign="middle" autoSize="none" text="成就" touchable="false"/>
+    <text id="s32_soc1" name="descText" xy="290,8" size="560,48" fontSize="18" color="#ffb8c4d8" align="left" vAlign="middle" autoSize="none" text="描述" touchable="false"/>
+    <text id="s33_soc1" name="stateText" xy="880,8" size="200,48" fontSize="20" color="#ffffd447" align="center" vAlign="middle" autoSize="none" text="未完成" touchable="false"/>
+  </displayList>
+</component>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1334,750" initName="frame">
+  <displayList>
+    <graph id="n10_lvfl" name="mask" xy="0,0" size="1334,750" type="rect" lineSize="0" fillColor="#aa000000">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="n11_lvfl" name="panel" xy="357,165" size="620,420" type="rect" lineSize="0" fillColor="#ff1a2742" corner="16" touchable="false">
+      <relation target="" sidePair="center-center"/>
+    </graph>
+    <text id="n12_lvfl" name="titleText" xy="397,201" size="540,52" fontSize="36" color="#ffffb833" align="center" vAlign="middle" autoSize="none" text="关卡完成">
+      <relation target="" sidePair="center-center"/>
+    </text>
+    <text id="n13_lvfl" name="detailText" xy="397,283" size="540,120" fontSize="24" color="#ffffffff" align="center" vAlign="middle" autoSize="none" text="">
+      <relation target="" sidePair="center-center"/>
+    </text>
+    <text id="n14_lvfl" name="hintText" xy="397,403" size="540,32" fontSize="18" color="#ffb8c4d8" align="center" vAlign="middle" autoSize="none" text="">
+      <relation target="" sidePair="center-center"/>
+    </text>
+    <component id="n15_lvfl" name="nextBtn" src="btn0lv01" fileName="components/LevelFlowButton.xml" xy="402,475" size="170,56">
+      <Button title="下一关"/>
+      <relation target="" sidePair="center-center"/>
+    </component>
+    <component id="n16_lvfl" name="replayBtn" src="btn0lv01" fileName="components/LevelFlowButton.xml" xy="582,475" size="170,56">
+      <Button title="重玩本关"/>
+      <relation target="" sidePair="center-center"/>
+    </component>
+    <component id="n17_lvfl" name="backBtn" src="btn0lv01" fileName="components/LevelFlowButton.xml" xy="762,475" size="170,56">
+      <Button title="返回选关"/>
+      <relation target="" sidePair="center-center"/>
+    </component>
+  </displayList>
+</component>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1100,56" opaque="true">
+  <displayList>
+    <graph id="s20_soc1" name="bg" xy="0,0" size="1100,56" type="rect" lineSize="0" fillColor="#ff1b2a45" corner="6" touchable="false"/>
+    <text id="s21_soc1" name="rankText" xy="16,8" size="100,40" fontSize="22" color="#ffffd447" align="center" vAlign="middle" autoSize="none" text="1" touchable="false"/>
+    <text id="s22_soc1" name="nameText" xy="130,8" size="420,40" fontSize="20" color="#ffffffff" align="left" vAlign="middle" autoSize="none" text="玩家" touchable="false"/>
+    <text id="s23_soc1" name="progressText" xy="580,8" size="220,40" fontSize="20" color="#ff9ad7ff" align="center" vAlign="middle" autoSize="none" text="进度 0" touchable="false"/>
+    <text id="s24_soc1" name="starText" xy="820,8" size="260,40" fontSize="20" color="#ffffcc66" align="center" vAlign="middle" autoSize="none" text="★ 0" touchable="false"/>
+  </displayList>
+</component>

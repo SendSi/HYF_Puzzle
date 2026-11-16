@@ -1,6 +1,65 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
+
+/// <summary>
+/// 单关最佳成绩（对应云端 profile.levels 里的每一条）。
+/// </summary>
+[Serializable]
+public class WXLevelRecord
+{
+    public int stars;
+    public long bestTimeMs;
+    public int hintsUsed;
+    public long firstClearAt;
+    public long lastClearAt;
+}
+
+/// <summary>
+/// 每日签到状态（对应云端 profile.daily）。
+/// </summary>
+[Serializable]
+public class WXDailyData
+{
+    public string date;
+    public bool signed;
+    public int streak;
+    public int reward;
+    public int hintReward;
+}
+
+[Serializable]
+public class WXRankEntry
+{
+    public int rank;
+    public string openid;
+    public string name;
+    public int progress;
+    public int totalStars;
+    public int coins;
+    public bool isSelf;
+}
+
+/// <summary>
+/// 云端结构化档案在客户端的可用字段。
+/// JsonUtility 不支持字典，levels/daily 由 OnProfileDataLoaded 单独用 Newtonsoft 解析。
+/// </summary>
+[Serializable]
+public class WXUserProfile
+{
+    public int progress;
+    public int cloudIntValue;
+    public int coins;
+    public int hints;
+    public long updatedAt;
+    public Dictionary<string, WXLevelRecord> levels = new Dictionary<string, WXLevelRecord>();
+    public string dailyDate;
+    public bool dailySigned;
+    public int dailyStreak;
+    public int dailyReward;
+    public int dailyHintReward;
+}
 
 /// <summary>
 /// 微信小游戏云存储管理器
@@ -36,6 +95,26 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     // 可加减 int 值变更事件（UI 或测试按钮可监听刷新）
     public event Action<int> OnCloudIntValueChanged;
 
+    // 结构化档案变更事件（本地上报或云端恢复后触发）
+    public event Action<WXUserProfile> OnProfileUpdated;
+
+    // 今日首次签到成功时触发（重复签到不触发）
+    public event Action<WXUserProfile> OnDailySigned;
+
+    // 排行榜数据到达时触发
+    public event Action<List<WXRankEntry>> OnRankListLoaded;
+
+    private readonly WXUserProfile _profile = new WXUserProfile();
+
+    [Serializable]
+    private class LevelClearReport
+    {
+        public int level;
+        public int stars;
+        public long timeMs;
+        public int hintsUsed;
+    }
+
     // 激励视频广告回调
     private Action _rewardedVideoSuccessCallback;
     private Action<string> _rewardedVideoFailCallback;
@@ -47,6 +126,9 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         WXCloudStorageCallback.EnsureCreated();
         // 启动时先读微信本地缓存；云端恢复由小游戏原生 JS 兜底脚本处理
         LoadProgressFromCloud();
+
+        // 拉取云端结构化档案（选关/结算页的星级、最佳用时等后续从它取）
+        WXCloudStorageNative.LoadProfile();
     }
 
     #region 公共接口
@@ -149,6 +231,234 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         Debuger.Log($"[WXCloudStorage] 当前本地进度: {_currentProgress}，CloudIntValue: {_currentCloudIntValue}");
     }
 
+    /// <summary>
+    /// 获取当前结构化档案（只读语义，修改请走专用接口）
+    /// </summary>
+    public WXUserProfile GetProfile()
+    {
+        _profile.progress = _currentProgress;
+        _profile.cloudIntValue = _currentCloudIntValue;
+        return _profile;
+    }
+
+    /// <summary>
+    /// 上报关卡完成。level 是刚拼完的关卡号，解锁进度由服务端推进并校验。
+    /// </summary>
+    public void ReportLevelClear(int clearedLevel, int stars = 1, long timeMs = 0, int hintsUsed = 0)
+    {
+        if (clearedLevel <= 0)
+            return;
+
+        int nextLevel = Mathf.Max(_currentProgress, clearedLevel + 1);
+        // syncWX=false：本路径由 reportLevelClear 直接写云端档案，不再重复走旧文件存档通道。
+        SaveMergedProgress(nextLevel, false);
+
+        _profile.progress = _currentProgress;
+        _profile.cloudIntValue = _currentCloudIntValue;
+        OnProfileUpdated?.Invoke(_profile);
+
+        var report = new LevelClearReport
+        {
+            level = clearedLevel,
+            stars = Mathf.Clamp(stars, 1, 3),
+            timeMs = Math.Max(0L, timeMs),
+            hintsUsed = Mathf.Max(0, hintsUsed),
+        };
+
+        MergeLocalLevelRecord(clearedLevel, report.stars, report.timeMs, report.hintsUsed);
+
+        WXCloudStorageNative.ReportLevelClear(JsonUtility.ToJson(report));
+        Debuger.Log($"[WXCloudStorage] 上报关卡完成: level={clearedLevel}, stars={report.stars}, timeMs={report.timeMs}, hints={report.hintsUsed}");
+    }
+
+    /// <summary>
+    /// 请求每日签到。日期、重复判断和奖励都由云函数决定。
+    /// </summary>
+    public void DailySignIn()
+    {
+        WXCloudStorageNative.DailySignIn();
+        Debuger.Log("[WXCloudStorage] 已请求每日签到");
+    }
+
+    /// <summary>
+    /// 消耗一个提示道具，数量由云函数权威扣减。
+    /// </summary>
+    public void UseHint()
+    {
+        if (_profile.hints <= 0)
+            return;
+
+        WXCloudStorageNative.UseHint();
+    }
+
+    /// <summary>
+    /// 发放提示道具（看广告等场景）。
+    /// </summary>
+    public void AddHint(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        WXCloudStorageNative.AddHint(amount);
+    }
+
+    /// <summary>
+    /// 请求全服排行榜（Top20），服务端按进度和总星数排序。
+    /// </summary>
+    public void LoadRankList()
+    {
+        WXCloudStorageNative.LoadRankList();
+    }
+
+    public void OnRankListDataLoaded(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+            return;
+
+        try
+        {
+            var list = JArray.Parse(json).ToObject<List<WXRankEntry>>();
+            OnRankListLoaded?.Invoke(list ?? new List<WXRankEntry>());
+        }
+        catch (Exception e)
+        {
+            Debuger.LogWarning($"[WXCloudStorage] 排行榜解析失败: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// JS 回调：云端档案已加载。只合并到本地缓存，不再反向写云，避免回环。
+    /// </summary>
+    public void OnProfileDataLoaded(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+            return;
+
+        WXUserProfile loaded;
+        try
+        {
+            loaded = JsonUtility.FromJson<WXUserProfile>(json);
+        }
+        catch (Exception e)
+        {
+            Debuger.LogError($"[WXCloudStorage] 档案解析失败: {e.Message}");
+            return;
+        }
+
+        if (loaded == null)
+            return;
+
+        string previousDailyDate = _profile.dailyDate;
+
+        try
+        {
+            var root = JObject.Parse(json);
+            var dailyToken = root["daily"];
+            if (dailyToken != null)
+            {
+                var daily = dailyToken.ToObject<WXDailyData>();
+                if (daily != null)
+                {
+                    _profile.dailyDate = daily.date;
+                    _profile.dailySigned = daily.signed;
+                    _profile.dailyStreak = Mathf.Max(0, daily.streak);
+                    _profile.dailyReward = Mathf.Max(0, daily.reward);
+                    _profile.dailyHintReward = Mathf.Max(0, daily.hintReward);
+                }
+            }
+
+            var hintsToken = root["hints"];
+            if (hintsToken != null && int.TryParse(hintsToken.ToString(), out int hints))
+            {
+                _profile.hints = Mathf.Max(0, hints);
+            }
+
+            var levelsToken = root["levels"];
+            if (levelsToken != null)
+            {
+                var levelRecords = levelsToken.ToObject<Dictionary<string, WXLevelRecord>>();
+                if (levelRecords != null)
+                {
+                    foreach (var pair in levelRecords)
+                    {
+                        if (int.TryParse(pair.Key, out int levelId) && levelId > 0)
+                        {
+                            MergeLocalLevelRecord(levelId, pair.Value);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debuger.LogWarning($"[WXCloudStorage] 档案扩展字段解析失败，忽略: {e.Message}");
+        }
+
+        int mergedProgress = Mathf.Max(_currentProgress, Mathf.Max(loaded.progress, _profile.progress));
+        if (mergedProgress > 0 && mergedProgress != _currentProgress)
+        {
+            _currentProgress = mergedProgress;
+            PlayerPrefsHelper.SetInteger(LOCAL_PROGRESS_KEY, _currentProgress);
+            OnProgressChanged?.Invoke(_currentProgress);
+        }
+
+        _profile.progress = Mathf.Max(_currentProgress, mergedProgress);
+        _profile.cloudIntValue = Mathf.Max(_currentCloudIntValue, Mathf.Max(loaded.cloudIntValue, _profile.cloudIntValue));
+        _profile.coins = Mathf.Max(_profile.coins, loaded.coins);
+        _profile.updatedAt = Math.Max(_profile.updatedAt, loaded.updatedAt);
+
+        if (_profile.cloudIntValue != _currentCloudIntValue)
+        {
+            _currentCloudIntValue = _profile.cloudIntValue;
+            PlayerPrefsHelper.SetInteger(LOCAL_CLOUD_INT_KEY, _currentCloudIntValue);
+            OnCloudIntValueChanged?.Invoke(_currentCloudIntValue);
+        }
+
+        if (_profile.dailySigned && !string.IsNullOrEmpty(_profile.dailyDate) && _profile.dailyDate != previousDailyDate)
+        {
+            OnDailySigned?.Invoke(_profile);
+            Debuger.Log($"[WXCloudStorage] 签到成功: +{_profile.dailyReward} 金币，+{_profile.dailyHintReward} 提示，连续 {_profile.dailyStreak} 天");
+        }
+
+        OnProfileUpdated?.Invoke(_profile);
+        Debuger.Log($"[WXCloudStorage] 档案已合并: progress={_profile.progress}, cloudInt={_profile.cloudIntValue}");
+    }
+
+    private void MergeLocalLevelRecord(int level, int stars, long timeMs, int hintsUsed)
+    {
+        MergeLocalLevelRecord(level, new WXLevelRecord
+        {
+            stars = stars,
+            bestTimeMs = Math.Max(0L, timeMs),
+            hintsUsed = Math.Max(0, hintsUsed),
+            firstClearAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            lastClearAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+        });
+    }
+
+    private void MergeLocalLevelRecord(int level, WXLevelRecord incoming)
+    {
+        if (incoming == null)
+            return;
+
+        string key = level.ToString();
+        if (!_profile.levels.TryGetValue(key, out var current) || current == null)
+        {
+            current = new WXLevelRecord();
+            _profile.levels[key] = current;
+        }
+
+        current.stars = Mathf.Max(current.stars, incoming.stars);
+        current.bestTimeMs = current.bestTimeMs > 0 && incoming.bestTimeMs > 0
+            ? Math.Min(current.bestTimeMs, incoming.bestTimeMs)
+            : Math.Max(current.bestTimeMs, incoming.bestTimeMs);
+        current.hintsUsed = current.hintsUsed > 0 && incoming.hintsUsed > 0
+            ? Math.Min(current.hintsUsed, incoming.hintsUsed)
+            : Math.Max(current.hintsUsed, incoming.hintsUsed);
+        current.firstClearAt = current.firstClearAt > 0 ? current.firstClearAt : incoming.firstClearAt;
+        current.lastClearAt = Math.Max(current.lastClearAt, incoming.lastClearAt);
+    }
+
     #endregion
 
     #region 微信云存储 JS 交互
@@ -229,7 +539,10 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         PlayerPrefsHelper.SetInteger(LOCAL_PROGRESS_KEY, progress);
         PlayerPrefsHelper.SetDateTime(CLOUD_SYNC_TIME_KEY, DateTime.Now);
 
-        SaveToWXLocal(progress);
+        if (syncWX)
+        {
+            SaveToWXLocal(progress);
+        }
 
         Debuger.Log($"[WXCloudStorage] 当前最大进度: 第{progress}关");
 

@@ -39,6 +39,7 @@ namespace PuzzlePKG
         public GTextField _yesTxt;
         public GButton _nextBtn;
         public GButton _finishBtn;
+        public GButton _tipBtn;
         public const string URL = "ui://791wrm7st16bl7";
 
         public static PuzzleMainView CreateInstance()
@@ -82,6 +83,7 @@ namespace PuzzlePKG
             _yesTxt = (GTextField)GetChild("yesTxt");
             _nextBtn = (GButton)GetChild("nextBtn");
             _finishBtn = (GButton)GetChild("finishBtn");
+            _tipBtn = (GButton)GetChild("tipBtn");
         }
     }
 }

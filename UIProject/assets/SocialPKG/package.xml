@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="soc1al01">
+  <resources>
+    <component id="socbtn01" name="SocialButton.xml" path="/components/" exported="true"/>
+    <component id="soclist01" name="SocialList.xml" path="/components/" exported="true"/>
+    <component id="rankrow01" name="RankRow.xml" path="/components/" exported="true"/>
+    <component id="acherow01" name="AchieveRow.xml" path="/components/" exported="true"/>
+    <component id="rankv001" name="RankView.xml" path="/panel/" exported="true"/>
+    <component id="achv0001" name="AchieveView.xml" path="/panel/" exported="true"/>
+    <component id="prof0001" name="ProfileView.xml" path="/panel/" exported="true"/>
+  </resources>
+  <publish name="" genCode="true"/>
+</packageDescription>

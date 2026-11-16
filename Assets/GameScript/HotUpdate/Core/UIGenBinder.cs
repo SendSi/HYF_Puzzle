@@ -3,6 +3,8 @@ using Login;
 using CommonPKG;
 using GMView;
 using PuzzlePKG;
+using LevelFlowPKG;
+using SocialPKG;
 using SettingPKG;
 
 public class UIGenBinder
@@ -17,5 +19,7 @@ public class UIGenBinder
         GMViewBinder.BindAll();
         SettingPKGBinder.BindAll();
         PuzzlePKGBinder.BindAll();
+        LevelFlowPKGBinder.BindAll();
+        SocialPKGBinder.BindAll();
     }
 }

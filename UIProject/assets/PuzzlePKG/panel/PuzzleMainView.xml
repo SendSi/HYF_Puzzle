@@ -45,5 +45,8 @@
     <component id="n215_ijm7" name="finishBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="617,6" size="135,44" visible="false">
       <Button title="GM全完成" titleFontSize="24" sound="ui://2r331opvu9ouh1"/>
     </component>
+    <component id="n217_q03n" name="tipBtn" src="eaahz9cob" fileName="components/com_btn_01.xml" pkg="2r331opv" xy="926,6" size="135,44">
+      <Button title="提示:0个" titleFontSize="23" sound="ui://2r331opvu9ouh1"/>
+    </component>
   </displayList>
 </component>

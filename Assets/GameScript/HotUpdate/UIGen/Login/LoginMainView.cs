@@ -14,6 +14,9 @@ namespace Login
         public GGroup _left;
         public GTextField _title_progress;
         public GButton _startGame;
+        public GButton _rankBtn;
+        public GButton _achieveBtn;
+        public GButton _profileBtn;
         public GGroup _center;
         public GTextField _title_03;
         public const string URL = "ui://byy9k3ghezv21ygcga7";
@@ -34,6 +37,9 @@ namespace Login
             _left = (GGroup)GetChild("left");
             _title_progress = (GTextField)GetChild("title_progress");
             _startGame = (GButton)GetChild("startGame");
+            _rankBtn = (GButton)GetChild("rankBtn");
+            _achieveBtn = (GButton)GetChild("achieveBtn");
+            _profileBtn = (GButton)GetChild("profileBtn");
             _center = (GGroup)GetChild("center");
             _title_03 = (GTextField)GetChild("title_03");
         }

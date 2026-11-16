@@ -100,6 +100,58 @@ mergeInto(LibraryManager.library, {
         }
     },
 
+    WXSaveProfile: function(jsonProfile) {
+        try {
+            var json = UTF8ToString(jsonProfile);
+            if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFSaveProfileToCloud) {
+                GameGlobal.__HYFSaveProfileToCloud(json, 'wasm');
+            }
+        } catch (err) {
+            console.warn('[WXCloudStorage.jslib] save profile exception:', err);
+        }
+    },
+
+    WXLoadProfile: function() {
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFLoadProfileFromCloud) {
+            GameGlobal.__HYFLoadProfileFromCloud();
+        }
+    },
+
+    WXReportLevelClear: function(jsonReport) {
+        try {
+            var json = UTF8ToString(jsonReport);
+            if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFReportLevelClear) {
+                GameGlobal.__HYFReportLevelClear(json, 'wasm');
+            }
+        } catch (err) {
+            console.warn('[WXCloudStorage.jslib] report level clear exception:', err);
+        }
+    },
+
+    WXDailySignIn: function() {
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFDailySignIn) {
+            GameGlobal.__HYFDailySignIn('wasm');
+        }
+    },
+
+    WXUseHint: function() {
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFUseHint) {
+            GameGlobal.__HYFUseHint();
+        }
+    },
+
+    WXAddHint: function(amount) {
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFAddHint) {
+            GameGlobal.__HYFAddHint(amount);
+        }
+    },
+
+    WXLoadRankList: function() {
+        if (typeof GameGlobal !== 'undefined' && GameGlobal.__HYFLoadRankList) {
+            GameGlobal.__HYFLoadRankList();
+        }
+    },
+
     WXSetStorageSync: function(key, value) {
         try {
             var keyStr = UTF8ToString(key);
@@ -112,19 +164,8 @@ mergeInto(LibraryManager.library, {
                 console.warn('[WXCloudStorage.jslib] wx.setStorageSync not available');
             }
 
-            if (keyStr === 'game_progress_local') {
-                var progressValue = parseInt(valueStr || '0', 10);
-                if (!isNaN(progressValue) && progressValue > 0) {
-                    WXSetCloudDatabaseProgress(progressValue);
-                }
-            }
-
-            if (keyStr === 'cloud_int_value_local') {
-                var cloudIntValue = parseInt(valueStr || '0', 10);
-                if (!isNaN(cloudIntValue) && cloudIntValue >= 0 && typeof GameGlobal !== 'undefined' && GameGlobal.__HYFSaveCloudIntValueToCloud) {
-                    GameGlobal.__HYFSaveCloudIntValueToCloud(cloudIntValue, 'wasm-storage');
-                }
-            }
+            // 云同步统一由 wx-cloud-progress-sync.js 拦截 wx.setStorageSync 处理，
+            // 这里不再重复调用 __HYFSaveProgressToCloud，避免同一进度并发上传两次。
         } catch (errorObj) {
             console.warn('[WXCloudStorage.jslib] setStorageSync exception:', errorObj);
         }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="180,88" opaque="true">
+  <displayList>
+    <graph id="n20_lvfl" name="bg" xy="0,0" size="180,88" type="rect" lineSize="0" fillColor="#ff2a6b9e" corner="10" touchable="false"/>
+    <loader id="n21_lvfl" name="thumbLoader" xy="104,8" size="68,72" fill="scaleFree" touchable="false"/>
+    <text id="n22_lvfl" name="levelText" xy="10,12" size="88,32" fontSize="22" color="#ffffffff" align="left" vAlign="middle" autoSize="none" text="第 1 关" touchable="false"/>
+    <text id="n23_lvfl" name="detailText" xy="10,48" size="88,26" fontSize="16" color="#ffeaF2ff" align="left" vAlign="middle" autoSize="none" text="★★★ 00:30" touchable="false"/>
+  </displayList>
+</component>

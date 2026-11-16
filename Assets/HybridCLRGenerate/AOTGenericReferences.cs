@@ -221,6 +221,9 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.EqualityComparer<int>
 	// System.Collections.Generic.EqualityComparer<object>
 	// System.Collections.Generic.EqualityComparer<uint>
+	// System.Collections.Generic.HashSet.Enumerator<object>
+	// System.Collections.Generic.HashSet<object>
+	// System.Collections.Generic.HashSetEqualityComparer<object>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<float,object>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<int,object>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,object>>
@@ -302,7 +305,9 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.ObjectEqualityComparer<int>
 	// System.Collections.Generic.ObjectEqualityComparer<object>
 	// System.Collections.Generic.ObjectEqualityComparer<uint>
+	// System.Collections.Generic.Queue.Enumerator<LevelFlowPKG.LevelSelectView.ThumbnailTask>
 	// System.Collections.Generic.Queue.Enumerator<object>
+	// System.Collections.Generic.Queue<LevelFlowPKG.LevelSelectView.ThumbnailTask>
 	// System.Collections.Generic.Queue<object>
 	// System.Collections.ObjectModel.ReadOnlyCollection<UnityEngine.Vector3>
 	// System.Collections.ObjectModel.ReadOnlyCollection<int>
@@ -311,9 +316,21 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Comparison<int>
 	// System.Comparison<object>
 	// System.Func<int>
+	// System.Func<object,byte>
+	// System.Func<object,int>
 	// System.Func<object,object>
 	// System.Func<object>
 	// System.IEquatable<ushort>
+	// System.Linq.Buffer<object>
+	// System.Linq.Enumerable.Iterator<object>
+	// System.Linq.Enumerable.WhereArrayIterator<object>
+	// System.Linq.Enumerable.WhereEnumerableIterator<object>
+	// System.Linq.Enumerable.WhereListIterator<object>
+	// System.Linq.EnumerableSorter<object,int>
+	// System.Linq.EnumerableSorter<object>
+	// System.Linq.OrderedEnumerable.<GetEnumerator>d__1<object>
+	// System.Linq.OrderedEnumerable<object,int>
+	// System.Linq.OrderedEnumerable<object>
 	// System.Nullable<System.DateTime>
 	// System.Nullable<UnityEngine.Vector3>
 	// System.Numerics.Vector<ulong>
@@ -383,12 +400,15 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void EventCenter.Fire<int>(int,int)
 		// object Newtonsoft.Json.JsonConvert.DeserializeObject<object>(string)
 		// object Newtonsoft.Json.JsonConvert.DeserializeObject<object>(string,Newtonsoft.Json.JsonSerializerSettings)
+		// object Newtonsoft.Json.Linq.JToken.ToObject<object>()
 		// object System.Activator.CreateInstance<object>()
+		// int System.Linq.Enumerable.Count<object>(System.Collections.Generic.IEnumerable<object>,System.Func<object,bool>)
 		// System.Collections.Generic.KeyValuePair<float,object> System.Linq.Enumerable.ElementAt<System.Collections.Generic.KeyValuePair<float,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<float,object>>,int)
 		// System.Collections.Generic.KeyValuePair<object,object> System.Linq.Enumerable.ElementAt<System.Collections.Generic.KeyValuePair<object,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>,int)
+		// System.Linq.IOrderedEnumerable<object> System.Linq.Enumerable.OrderBy<object,int>(System.Collections.Generic.IEnumerable<object>,System.Func<object,int>)
+		// System.Collections.Generic.List<object> System.Linq.Enumerable.ToList<object>(System.Collections.Generic.IEnumerable<object>)
+		// System.Collections.Generic.IEnumerable<object> System.Linq.Enumerable.Where<object>(System.Collections.Generic.IEnumerable<object>,System.Func<object,bool>)
 		// int System.MemoryExtensions.IndexOf<ushort>(System.ReadOnlySpan<ushort>,ushort)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,Login.LoginMainView.<OnClickMapBtn1>d__4>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,Login.LoginMainView.<OnClickMapBtn1>d__4&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Login.LoginMainView.<OnClickMapBtn1>d__4>(Login.LoginMainView.<OnClickMapBtn1>d__4&)
 		// ushort& System.Runtime.CompilerServices.Unsafe.Add<ushort>(ushort&,System.IntPtr)
 		// byte& System.Runtime.CompilerServices.Unsafe.As<ushort,byte>(ushort&)
 		// object& System.Runtime.CompilerServices.Unsafe.As<object,object>(object&)

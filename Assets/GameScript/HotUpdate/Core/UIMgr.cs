@@ -29,6 +29,36 @@ public class UIMgr : Singleton<UIMgr>
         return gCom as T1;
     }
 
+    /// <summary>
+    /// 打开纯代码构建的页面（不依赖 FairyGUI 包组件）。
+    /// </summary>
+    public T1 OpenCodeUIView<T1>() where T1 : GComponent, new()
+    {
+        string viewName = typeof(T1).Name;
+        T1 view = new T1();
+        view.MakeFullScreen();
+        GRoot.inst.AddChild(view);
+        view.AddRelation(GRoot.inst, RelationType.Size);
+        view.fairyBatching = true;
+        view.name = viewName;
+        view.OnInit();
+        mShoGCompDic[viewName] = view;
+        return view;
+    }
+
+    /// <summary>
+    /// 关闭纯代码构建的页面。代码页面没有 packageItem，不能走 CheckRemovePackage。
+    /// </summary>
+    public void CloseCodeUIView<T1>() where T1 : GComponent
+    {
+        string viewName = typeof(T1).Name;
+        if (mShoGCompDic.TryGetValue(viewName, out var view))
+        {
+            mShoGCompDic.Remove(viewName);
+            view.Dispose();
+        }
+    }
+
     /// <summary>关闭页面..传入具体页面类 </summary>
     public void CloseUIViewCom<T1>() where T1 : GComponent
     {
@@ -39,7 +69,10 @@ public class UIMgr : Singleton<UIMgr>
             gCom.Dispose();
             mShoGCompDic.Remove(viewName);
 
-            CheckRemovePackage(gCom.packageItem.owner.name); //关闭页面 检测 移除 业务包
+            if (gCom.packageItem != null && gCom.packageItem.owner != null)
+            {
+                CheckRemovePackage(gCom.packageItem.owner.name); //关闭页面 检测 移除 业务包
+            }
         }
     }
 
@@ -102,7 +135,7 @@ public class UIMgr : Singleton<UIMgr>
         var isNeedGCom = true;
         foreach (var item in mShoGCompDic)
         {
-            if (item.Value.packageItem.owner.name == pkgName)
+            if (item.Value.packageItem != null && item.Value.packageItem.owner != null && item.Value.packageItem.owner.name == pkgName)
             {
                 isNeedGCom = false; //其他页面还有引用
                 return;
@@ -113,7 +146,9 @@ public class UIMgr : Singleton<UIMgr>
         {
             foreach (var item in mShowWinDic)
             {
-                if (item.Value.contentPane.packageItem.owner.name == pkgName)
+                if (item.Value.contentPane != null && item.Value.contentPane.packageItem != null
+                    && item.Value.contentPane.packageItem.owner != null
+                    && item.Value.contentPane.packageItem.owner.name == pkgName)
                 {
                     isNeedGCom = false; //其他Win还有引用
                     return;

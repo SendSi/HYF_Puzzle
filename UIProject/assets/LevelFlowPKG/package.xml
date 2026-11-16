@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="lvfl0w01">
+  <resources>
+    <component id="btn0lv01" name="LevelFlowButton.xml" path="/components/" exported="true"/>
+    <component id="card0lv01" name="LevelCard.xml" path="/components/" exported="true"/>
+    <component id="grid0lv01" name="LevelGrid.xml" path="/components/" exported="true"/>
+    <component id="sel0v001" name="LevelSelectView.xml" path="/panel/" exported="true"/>
+    <component id="rslt0001" name="ResultView.xml" path="/panel/" exported="true"/>
+  </resources>
+  <publish name="" genCode="true"/>
+</packageDescription>

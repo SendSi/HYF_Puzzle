@@ -14,6 +14,9 @@ namespace Login
 
             this._ageBtn.onClick.Set(OnClickAgeBtn);
             this._startGame.onClick.Set(OnClickMapBtn1);
+            GetChild("rankBtn").asButton.onClick.Set(OnClickRankView);
+            GetChild("achieveBtn").asButton.onClick.Set(OnClickAchieveView);
+            GetChild("profileBtn").asButton.onClick.Set(OnClickProfileView);
 
             // 初始化时显示进度（先从本地读，等云端回调回来再更新）
             int savedProgress = WXCloudStorageManager.Instance.GetProgress();
@@ -26,7 +29,7 @@ namespace Login
             this._btn_progress.onClick.Set(OnClickProgressBtn);
 
 #if UNITY_EDITOR
-            _btn_progress.visible = true;
+            _btn_progress.visible = false;
 #else
             _btn_progress.visible = false;
 #endif
@@ -71,15 +74,24 @@ namespace Login
             Debuger.Log($"[LoginMainView] 进度已保存: 第{level}关");
         }
 
-        private async void OnClickMapBtn1()
+        private void OnClickMapBtn1()
         {
-            int level = WXCloudStorageManager.Instance.GetProgress();
-            if (level <= 0) level = 1;
-            var isCan = await CheckNextLv(level);
-            if (isCan)
-            {
-                ProxyPuzzlePKGModule.Instance.OpenPuzzleMainView(level);
-            }
+            ProxyPuzzlePKGModule.Instance.OpenLevelSelectView();
+        }
+
+        private void OnClickRankView()
+        {
+            ProxySocialPKGModule.Instance.OpenRankView();
+        }
+
+        private void OnClickAchieveView()
+        {
+            ProxySocialPKGModule.Instance.OpenAchieveView();
+        }
+
+        private void OnClickProfileView()
+        {
+            ProxySocialPKGModule.Instance.OpenProfileView();
         }
 
         private async UniTask<bool> CheckNextLv(int currLv, int deleyTime = 500)

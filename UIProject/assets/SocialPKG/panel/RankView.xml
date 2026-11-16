@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1334,750" initName="frame">
+  <displayList>
+    <graph id="s40_soc1" name="bg" xy="0,0" size="1334,750" type="rect" lineSize="0" fillColor="#ff101a2e" touchable="false"/>
+    <graph id="s41_soc1" name="header" xy="0,0" size="1334,88" type="rect" lineSize="0" fillColor="#ff1c2945" touchable="false"/>
+    <text id="s42_soc1" name="titleText" xy="260,22" size="800,44" fontSize="30" color="#ffffffff" align="center" vAlign="middle" autoSize="none" text="排行榜"/>
+    <component id="s43_soc1" name="closeBtn" src="socbtn01" fileName="components/SocialButton.xml" xy="30,20" size="180,48">
+      <Button title="返回"/>
+    </component>
+    <text id="s44_soc1" name="tipText" xy="117,104" size="1100,40" fontSize="18" color="#ff9fb0c8" align="left" vAlign="middle" autoSize="none" text="按解锁进度与总星数排名"/>
+    <component id="s45_soc1" name="rankList" src="soclist01" fileName="components/SocialList.xml" xy="117,156" size="1100,520"/>
+  </displayList>
+</component>

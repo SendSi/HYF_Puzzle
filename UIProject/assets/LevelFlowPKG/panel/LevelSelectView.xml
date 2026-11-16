@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1334,750" initName="frame">
+  <displayList>
+    <graph id="n0_lvfl" name="bg" xy="0,0" size="1334,750" type="rect" lineSize="0" fillColor="#ff121f33" touchable="false">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="n1_lvfl" name="header" xy="0,0" size="1334,88" type="rect" lineSize="0" fillColor="#ff1c2945" touchable="false">
+      <relation target="" sidePair="width-width"/>
+    </graph>
+    <component id="n2_lvfl" name="backBtn" src="btn0lv01" fileName="components/LevelFlowButton.xml" xy="30,18" size="120,52">
+      <Button title="返回"/>
+      <relation target="" sidePair="left-left"/>
+    </component>
+    <text id="n3_lvfl" name="titleText" xy="340,22" size="700,44" fontSize="30" color="#ffffffff" align="center" vAlign="middle" autoSize="none" text="选择关卡">
+      <relation target="" sidePair="width-width"/>
+    </text>
+    <component id="n4_lvfl" name="signBtn" src="btn0lv01" fileName="components/LevelFlowButton.xml" xy="170,18" size="150,52">
+      <Button title="每日签到"/>
+      <relation target="" sidePair="right-right"/>
+    </component>
+    <component id="n5_lvfl" name="levelGrid" src="grid0lv01" fileName="components/LevelGrid.xml" xy="77,120" size="1180,600">
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+  </displayList>
+</component>

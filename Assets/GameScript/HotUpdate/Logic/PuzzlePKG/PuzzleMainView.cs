@@ -1,6 +1,7 @@
 ﻿using FairyGUI;
 using System.Collections.Generic;
 using cfg;
+using LevelFlowPKG;
 using UnityEngine;
 
 namespace PuzzlePKG
@@ -14,6 +15,10 @@ namespace PuzzlePKG
         private int _currentLevel = 1; //当前关卡
         private string _currentIconUrl = ""; //当前关卡图片url
         private bool _isWaitingNextStepAd = false;
+        private int _hintsUsed = 0;
+        private float _levelStartTime = 0f;
+        private bool _levelReported = false;
+        private bool _isWaitingTipAd = false;
 
         public override void OnInit()
         {
@@ -23,6 +28,10 @@ namespace PuzzlePKG
             this._closeButton.onClick.Set(OnClickCloseBtn);
             this._finishBtn.onClick.Set(OnClickFinishBtnGM);
             this._nextBtn.onClick.Set(OnClickNextBtn);
+            this._tipBtn.onClick.Set(OnClickTipBtn);
+
+            WXCloudStorageManager.Instance.OnProfileUpdated += OnProfileUpdated;
+            RefreshTipButton();
 
             // 检查配置表是否已初始化（WebGL平台是异步加载）
             if (CfgLubanMgr.Instance.globalTab == null)
@@ -190,6 +199,63 @@ namespace PuzzlePKG
 #endif
         }
 
+        private void OnClickTipBtn()
+        {
+            if (_isWaitingTipAd || _isWaitingNextStepAd || !HasNextStep())
+                return;
+
+            // 有库存道具：消耗一个，并计入本关提示次数。
+            if (WXCloudStorageManager.Instance.GetProfile().hints > 0)
+            {
+                WXCloudStorageManager.Instance.UseHint();
+                DoNextStepAfterAd();
+                return;
+            }
+
+            // 没有道具：看广告只能“获得1个提示道具”，不会免费提示，也不会自动使用。
+#if UNITY_WEBGL && !UNITY_EDITOR
+            _isWaitingTipAd = true;
+            this._tipBtn.enabled = false;
+            WXCloudStorageManager.Instance.ShowRewardedVideoAd(
+                NEXT_STEP_REWARDED_AD_UNIT_ID,
+                () =>
+                {
+                    _isWaitingTipAd = false;
+                    this._tipBtn.enabled = true;
+                    WXCloudStorageManager.Instance.AddHint(1);
+                    ProxyCommonPKGModule.Instance.AddToastStr("获得1个提示，再点一次即可使用");
+                },
+                (error) =>
+                {
+                    _isWaitingTipAd = false;
+                    this._tipBtn.enabled = true;
+
+                    if (IsRewardedAdUnavailable(error))
+                    {
+                        ProxyCommonPKGModule.Instance.AddToastStr("暂无广告，可通过每日签到获得提示");
+                        return;
+                    }
+
+                    ProxyCommonPKGModule.Instance.AddToastStr("看完广告后才能获得提示");
+                });
+#else
+            ProxyCommonPKGModule.Instance.AddToastStr("提示不足，可通过每日签到获得");
+#endif
+        }
+
+        private void RefreshTipButton()
+        {
+            if (this._tipBtn != null)
+            {
+                this._tipBtn.title = $"提示:{WXCloudStorageManager.Instance.GetProfile().hints}个";
+            }
+        }
+
+        private void OnProfileUpdated(WXUserProfile profile)
+        {
+            RefreshTipButton();
+        }
+
         private bool IsRewardedAdUnavailable(string error)
         {
             if (string.IsNullOrEmpty(error))
@@ -236,6 +302,8 @@ namespace PuzzlePKG
 
             if (notPlacedList.Count == 0)
                 return;
+
+            _hintsUsed++;
 
             // 优先级1: 目标位置没有被任何拼图块占用的
             var priority1List = new List<GObject>();
@@ -429,13 +497,29 @@ namespace PuzzlePKG
             }
             else if (index >= mPuzzleList.Count)
             {
-                Debug.Log("拼图 完成了");
-                ProxyCommonPKGModule.Instance.AddToastStr("拼图完成了");
+                if (_levelReported)
+                    return;
 
-                // 关卡完成，进度+1
-                int nextLevel = _currentLevel + 1;
-                WXCloudStorageManager.Instance.SaveProgress(nextLevel);
-                Debug.Log($"[PuzzleMainView] 第{_currentLevel}关完成，解锁第{nextLevel}关");
+                _levelReported = true;
+                Debug.Log("拼图 完成了");
+
+                long elapsedMs = (long)((Time.realtimeSinceStartup - _levelStartTime) * 1000f);
+                int stars = _hintsUsed == 0 && elapsedMs <= 60000 ? 3 : (_hintsUsed <= 1 ? 2 : 1);
+
+                // 上报“刚拼完的关卡”，解锁进度由云端校验后推进。
+                WXCloudStorageManager.Instance.ReportLevelClear(_currentLevel, stars, elapsedMs, _hintsUsed);
+
+                var profile = WXCloudStorageManager.Instance.GetProfile();
+                ProxyPuzzlePKGModule.Instance.OpenResultView(new LevelClearResultData
+                {
+                    Level = _currentLevel,
+                    Stars = stars,
+                    ElapsedMs = elapsedMs,
+                    HintsUsed = _hintsUsed,
+                    UnlockedLevel = Mathf.Max(1, profile.progress),
+                });
+
+                Debug.Log($"[PuzzleMainView] 第{_currentLevel}关完成，{stars}星，用时{elapsedMs}ms，提示{_hintsUsed}次");
             }
 
             Debug.Log($"拼了 {index} 块了");
@@ -449,6 +533,9 @@ namespace PuzzlePKG
         public void SetData(int level)
         {
             _currentLevel = level;
+            _hintsUsed = 0;
+            _levelStartTime = Time.realtimeSinceStartup;
+            _levelReported = false;
 
             // 加载当前关卡的图片（OnInit 先于 SetData 调用，所以在这里加载）
             // SetImageTask 异步加载 Map 包，完成后自动设置 _iconBg 和所有拼图块的 icon.url
@@ -460,6 +547,7 @@ namespace PuzzlePKG
 
         public override void Dispose()
         {
+            WXCloudStorageManager.Instance.OnProfileUpdated -= OnProfileUpdated;
             base.Dispose();
             EventCenter.Instance.Fire<int>((int)EventEnumAOT.EE_NumOfCircleToShow, 2);
         }

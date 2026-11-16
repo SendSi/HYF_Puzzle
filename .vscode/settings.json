@@ -12,5 +12,6 @@
         "logs/": true,
         "UserSettings/": true,
         "userSettings/": true
-    }
+    },
+    "dotnet.defaultSolution": "HYF_Puzzle.sln"
 }

@@ -200,6 +200,38 @@ function profileFromLegacyRecord(record, userId, context = {}) {
   return profile
 }
 
+// 数据自愈：历史版本里 progress 走文件通道、levels 走数据库通道，
+// 会出现"解锁到第 N 关但 levels 一条通关记录都没有"的脱节状态，
+// 表现为关卡列表第 1~N 关全部显示"需完成"。这里按 progress 补齐缺失的通关记录。
+// progress 的语义是"下一个可玩关卡"，因此 1..progress-1 都应视为已通关。
+function healLevelsByProgress(profile) {
+  if (!profile || typeof profile !== 'object') return false
+  const progress = clampInt(profile.progress, 0, MAX_LEVEL)
+  if (progress <= 1) return false
+
+  if (!profile.levels || typeof profile.levels !== 'object' || Array.isArray(profile.levels)) {
+    profile.levels = {}
+  }
+
+  let healed = false
+  const now = Date.now()
+  for (let level = 1; level < progress; level++) {
+    const key = String(level)
+    const rec = profile.levels[key]
+    if (rec && typeof rec === 'object' && clampInt(rec.stars, 0, 3) > 0) continue
+    profile.levels[key] = {
+      stars: 3,
+      bestTimeMs: clampInt(rec && rec.bestTimeMs, 0, 86400000),
+      hintsUsed: clampInt(rec && rec.hintsUsed, 0, 9999),
+      attempts: clampInt(rec && rec.attempts, 0, 999999) || 1,
+      firstClearAt: clampInt(rec && rec.firstClearAt, 0, 9999999999999) || now,
+      lastClearAt: now,
+    }
+    healed = true
+  }
+  return healed
+}
+
 async function loadProfile(userId, env, context) {
   let dbError = ''
   let profile = null
@@ -220,12 +252,22 @@ async function loadProfile(userId, env, context) {
     profile = profileFromLegacyRecord(legacy.data, userId, context)
     if (legacy.found) {
       mode = 'legacy-file-migrated'
+    }
+  }
+
+  // 按解锁进度补齐缺失的通关记录，并把自愈结果落库，避免每次读取都重复补
+  if (profile) {
+    let migratedWrite = false
+    if (healLevelsByProgress(profile)) {
+      mode = mode === 'database' ? 'database-healed' : mode + '-healed'
+      migratedWrite = true
+    }
+    if (!profile._id || migratedWrite) {
       try {
         await writeProfileDoc(userId, profile, context)
-        mode = 'database-migrated'
+        if (mode.indexOf('migrated') < 0) mode = 'database-migrated'
       } catch (error) {
         dbError = getErrorMessage(error)
-        mode = 'legacy-file'
       }
     }
   }
@@ -251,6 +293,9 @@ async function getProfile(userId, env, context) {
 async function saveProfile(userId, env, context, incoming) {
   const loaded = await loadProfile(userId, env, context)
   const merged = mergeProfile(loaded.profile, incoming, userId, context)
+  // 合并后同样按 progress 补齐 levels：真机上报的 progress 可能领先，
+  // 但 levels 缺失，必须在这里补上，否则关卡列表会全是"需完成"。
+  healLevelsByProgress(merged)
 
   try {
     const written = await writeProfileDoc(userId, merged, context)
@@ -402,46 +447,22 @@ async function dailySignIn(userId, env, context) {
 }
 
 async function getRankList(userId, env, context) {
+  let docs = []
+  let warning = ''
+
+  // 直接整表读取后在内存里排序：避免 field 投影 / orderBy 索引在部分环境下报错，
+  // 一旦报错会导致客户端拿不到任何数据，界面停在"加载中"。
   try {
     const db = cloud.database()
-    const res = await db.collection(PROFILE_COLLECTION)
-      .field({ openid: true, progress: true, levels: true, coins: true, updatedAt: true })
-      .orderBy('progress', 'desc')
-      .limit(100)
-      .get()
-
-    const rows = (res && res.data ? res.data : []).map((doc, index) => {
-      const levels = doc.levels && typeof doc.levels === 'object' ? doc.levels : {}
-      let totalStars = 0
-      Object.keys(levels).forEach((key) => {
-        if (/^\d+$/.test(key)) {
-          totalStars += clampInt(levels[key] && levels[key].stars, 0, 3)
-        }
-      })
-
-      const openid = String(doc.openid || doc._id || '')
-      return {
-        rank: index + 1,
-        openid,
-        name: `玩家${openid.length > 4 ? openid.slice(-4) : '****'}`,
-        progress: clampInt(doc.progress, 0, MAX_LEVEL),
-        totalStars,
-        coins: clampInt(doc.coins, 0, 1000000000),
-        isSelf: doc._id === userId,
-      }
-    })
-
-    rows.sort((a, b) => b.progress - a.progress || b.totalStars - a.totalStars || a.rank - b.rank)
-    rows.forEach((row, index) => { row.rank = index + 1 })
-
-    const selfEntry = rows.find((row) => row.isSelf) || null
-    return {
-      ok: true,
-      list: rows.slice(0, 20),
-      selfRank: selfEntry ? selfEntry.rank : 0,
-      total: rows.length,
-      env,
-      appid: context.appid || '',
+    try {
+      const res = await db.collection(PROFILE_COLLECTION).limit(100).get()
+      docs = (res && res.data) || []
+    } catch (firstError) {
+      warning = getErrorMessage(firstError)
+      await ensureProfileCollection()
+      const retry = await db.collection(PROFILE_COLLECTION).limit(100).get()
+      docs = (retry && retry.data) || []
+      warning = ''
     }
   } catch (error) {
     return {
@@ -454,6 +475,50 @@ async function getRankList(userId, env, context) {
       warning: getErrorMessage(error),
     }
   }
+
+  const rows = []
+  docs.forEach((doc) => {
+    if (!doc) return
+    try {
+      const levels = doc.levels && typeof doc.levels === 'object' ? doc.levels : {}
+      let totalStars = 0
+      Object.keys(levels).forEach((key) => {
+        if (/^\d+$/.test(key)) {
+          totalStars += clampInt(levels[key] && levels[key].stars, 0, 3)
+        }
+      })
+
+      const openid = String(doc.openid || '')
+      const docId = String(doc._id || '')
+      rows.push({
+        rank: 0,
+        openid,
+        name: `玩家${openid.length > 4 ? openid.slice(-4) : (docId.length > 4 ? docId.slice(-4) : '****')}`,
+        progress: clampInt(doc.progress, 0, MAX_LEVEL),
+        totalStars,
+        coins: clampInt(doc.coins, 0, 1000000000),
+        isSelf: docId === userId,
+        updatedAt: clampInt(doc.updatedAt, 0, 9999999999999),
+      })
+    } catch (error) {
+      // 单条脏数据不影响整张榜
+    }
+  })
+
+  rows.sort((a, b) => b.progress - a.progress || b.totalStars - a.totalStars || b.updatedAt - a.updatedAt)
+  rows.forEach((row, index) => { row.rank = index + 1 })
+
+  const selfEntry = rows.find((row) => row.isSelf) || null
+  const result = {
+    ok: true,
+    list: rows.slice(0, 20),
+    selfRank: selfEntry ? selfEntry.rank : 0,
+    total: rows.length,
+    env,
+    appid: context.appid || '',
+  }
+  if (warning) result.warning = warning
+  return result
 }
 
 async function changeHints(userId, env, context, delta) {
@@ -687,7 +752,26 @@ async function setProgress(userId, incomingProgress, env, context = {}) {
     return { ok: true, progress: 0, cloudIntValue: 0, env, saved: false, recordId: getProgressDocId(userId) }
   }
 
-  return await writeMergedRecord(userId, env, context, { progress: incomingProgress })
+  const recordResult = await writeMergedRecord(userId, env, context, { progress: incomingProgress })
+
+  // 关键：把进度同步进结构化档案并补齐 levels，
+  // 避免 progress 走文件通道、levels 走数据库通道造成"解锁但无通关记录"。
+  try {
+    const loaded = await loadProfile(userId, env, context)
+    const profile = loaded.profile
+    if (profile.progress < incomingProgress) profile.progress = incomingProgress
+    healLevelsByProgress(profile)
+    const written = await writeProfileDoc(userId, profile, context)
+    return {
+      ...recordResult,
+      profile: written,
+      progress: written.progress,
+      cloudIntValue: written.cloudIntValue,
+      mode: 'database-synced',
+    }
+  } catch (error) {
+    return { ...recordResult, warning: getErrorMessage(error) }
+  }
 }
 
 async function setCloudIntValue(userId, incomingValue, env, context = {}) {

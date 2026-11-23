@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="1334,750" initName="frame">
   <displayList>
-    <graph id="s50_soc1" name="bg" xy="0,0" size="1334,750" type="rect" lineSize="0" fillColor="#ff101a2e" touchable="false"/>
-    <graph id="s51_soc1" name="header" xy="0,0" size="1334,88" type="rect" lineSize="0" fillColor="#ff1c2945" touchable="false"/>
+    <graph id="s50_soc1" name="bg" xy="0,0" size="1334,750" type="rect" lineSize="0" fillColor="#ff101a2e" touchable="false">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="s51_soc1" name="header" xy="0,0" size="1334,88" type="rect" lineSize="0" fillColor="#ff1c2945" touchable="false">
+      <relation target="" sidePair="width-width"/>
+    </graph>
     <text id="s52_soc1" name="titleText" xy="260,22" size="800,44" fontSize="30" color="#ffffffff" align="center" vAlign="middle" autoSize="none" text="成就"/>
     <component id="s53_soc1" name="closeBtn" src="socbtn01" fileName="components/SocialButton.xml" xy="30,20" size="180,48">
       <Button title="返回"/>

@@ -166,7 +166,38 @@ function writeLocalProfile(profile) {
   }
 }
 
-function notifyUnityProfile(profile, source) {
+// 数据自愈：progress 表示"下一个可玩关卡"，1..progress-1 都应视为已通关。
+// 历史版本 progress 走文件通道、levels 走数据库通道，会出现"解锁 N 关但 levels 全空"，
+// 表现就是关卡列表第 1~N 关全显示"需完成"。这里在推给 Unity 前统一补齐。
+function healProfileByProgress(profile) {
+  if (!profile || typeof profile !== 'object') return profile
+  const progress = parseInt(profile.progress || 0, 10)
+  if (!(progress > 1)) return profile
+
+  const source = profile.levels && typeof profile.levels === 'object' && !Array.isArray(profile.levels)
+    ? profile.levels
+    : {}
+  const levels = Object.assign({}, source)
+  let changed = false
+  for (let level = 1; level < progress; level++) {
+    const key = String(level)
+    const rec = levels[key]
+    if (rec && typeof rec === 'object' && parseInt(rec.stars || 0, 10) > 0) continue
+    levels[key] = {
+      stars: 1,
+      bestTimeMs: (rec && parseInt(rec.bestTimeMs || 0, 10)) || 0,
+      hintsUsed: (rec && parseInt(rec.hintsUsed || 0, 10)) || 0,
+      firstClearAt: (rec && parseInt(rec.firstClearAt || 0, 10)) || Date.now(),
+      lastClearAt: Date.now(),
+    }
+    changed = true
+  }
+  if (changed) profile.levels = levels
+  return profile
+}
+
+function notifyUnityProfile(rawProfile, source) {
+  const profile = healProfileByProgress(rawProfile)
   if (!profile) return
   const json = JSON.stringify(profile)
   const notify = function () {
@@ -188,7 +219,30 @@ function handleProfileResult(result, source, fallbackProfile) {
 
   const profile = parseProfile(result.profile) || fallbackProfile
   if (!profile) return false
-  console.log('[WXCloudProgressSync] profile loaded:', JSON.stringify({ source: source, hints: profile.hints, hintReward: result.hintReward }))
+
+  // 关键兜底：真机的"已解锁 N 关"来自本地 game_progress_local（文件通道），
+  // 而云端档案的 progress 可能仍是 0，导致云函数自愈按 progress=0 不补 levels。
+  // 这里用本地进度/localProfile 提升 profile.progress，再由 notifyUnityProfile 补齐 levels。
+  const localProgressCache = getLocalProgress()
+  const fallbackProgress = fallbackProfile ? parseInt(fallbackProfile.progress || 0, 10) : 0
+  const effectiveProgress = Math.max(
+    parseInt(profile.progress || 0, 10) || 0,
+    localProgressCache > 0 ? localProgressCache : 0,
+    fallbackProgress > 0 ? fallbackProgress : 0
+  )
+  if (effectiveProgress > 0 && effectiveProgress !== parseInt(profile.progress || 0, 10)) {
+    profile.progress = effectiveProgress
+  }
+
+  healProfileByProgress(profile)
+  console.log('[WXCloudProgressSync] profile loaded:', JSON.stringify({
+    source: source,
+    progress: profile.progress,
+    levelCount: profile.levels && typeof profile.levels === 'object' ? Object.keys(profile.levels).length : 0,
+    hints: profile.hints,
+    coins: profile.coins,
+    hintReward: result.hintReward,
+  }))
   writeLocalProfile(profile)
   notifyUnityProfile(profile, source)
   return true
@@ -362,26 +416,110 @@ function changeHintsToCloud(delta, source) {
   })
 }
 
-function loadRankListToCloud(source) {
-  if (!initCloud()) return
+// 排行榜兜底：云端不可用时用本地档案拼一条自己的记录。
+// 关键点：必须保证有一个结果回传给 Unity，否则界面会永远停在"排行榜加载中..."。
+function buildLocalRankFallback(reason) {
+  const profile = getLocalProfile() || {}
+  const cachedProgress = parseInt(profile.progress || 0, 10) || 0
+  const localProgress = getLocalProgress()
+  const progress = Math.max(cachedProgress, localProgress, 0)
 
-  wx.cloud.callFunction({
-    name: CLOUD_FUNCTION_NAME,
-    data: { action: 'getRankList' },
-    success(res) {
-      const result = res && res.result
-      if (!result || result.ok === false || !Array.isArray(result.list)) {
-        console.warn('[WXCloudProgressSync] getRankList failed:', result && result.warning, 'source:', source)
-        return
-      }
-      if (sendToUnity('WXCloudStorageCallbackObj', 'OnRankListLoaded', JSON.stringify(result.list))) {
-        console.log('[WXCloudProgressSync] notified unity rank list:', source)
-      }
-    },
-    fail(error) {
-      console.warn('[WXCloudProgressSync] getRankList fail:', error, 'source:', source)
-    },
+  const levels = profile.levels && typeof profile.levels === 'object' && !Array.isArray(profile.levels)
+    ? profile.levels
+    : {}
+  let totalStars = 0
+  Object.keys(levels).forEach(function (key) {
+    if (/^\d+$/.test(key)) {
+      totalStars += parseInt((levels[key] || {}).stars || 0, 10) || 0
+    }
   })
+
+  console.warn('[WXCloudProgressSync] rank list fallback:', reason, 'progress:', progress, 'stars:', totalStars)
+  return [{
+    rank: 1,
+    openid: '',
+    name: '玩家',
+    progress: progress,
+    totalStars: totalStars,
+    coins: parseInt(profile.coins || 0, 10) || 0,
+    isSelf: true,
+  }]
+}
+
+function notifyRankListToUnity(list, source) {
+  const rows = Array.isArray(list) ? list : []
+  const json = JSON.stringify(rows)
+  const sent = sendToUnity('WXCloudStorageCallbackObj', 'OnRankListLoaded', json)
+  console.log('[WXCloudProgressSync] rank list -> unity:', rows.length, 'rows, sent:', sent, 'source:', source)
+  return sent
+}
+
+function ensureSelfRankRow(rows) {
+  const list = Array.isArray(rows) ? rows.slice() : []
+  let hasSelf = false
+  for (let i = 0; i < list.length; i++) {
+    if (list[i] && list[i].isSelf) { hasSelf = true; break }
+  }
+  if (hasSelf) return list
+
+  const self = buildLocalRankFallback('append-self')[0]
+  self.rank = list.length + 1
+  list.push(self)
+  return list
+}
+
+function loadRankListToCloud(source) {
+  let settled = false
+  const timer = setTimeout(function rankListTimeout() {
+    finish(buildLocalRankFallback('timeout'), 'timeout')
+  }, 8000)
+
+  function finish(list, tag) {
+    if (settled) return
+    settled = true
+    clearTimeout(timer)
+    notifyRankListToUnity(list, source + '#' + tag)
+  }
+
+  if (!initCloud()) {
+    finish(buildLocalRankFallback('cloud-unavailable'), 'cloud-unavailable')
+    return
+  }
+
+  try {
+    wx.cloud.callFunction({
+      name: CLOUD_FUNCTION_NAME,
+      data: { action: 'getRankList' },
+      success(res) {
+        const result = res && res.result
+        const rows = result && Array.isArray(result.list) ? result.list : null
+        console.log('[WXCloudProgressSync] getRankList result:', JSON.stringify({
+          ok: result && result.ok,
+          count: rows ? rows.length : -1,
+          selfRank: result && result.selfRank,
+          warning: result && result.warning,
+          error: result && result.error,
+        }), 'source:', source)
+
+        if (!rows) {
+          finish(buildLocalRankFallback('invalid-result'), 'invalid-result')
+          return
+        }
+        if (rows.length === 0) {
+          finish(buildLocalRankFallback('empty-list'), 'empty-list')
+          return
+        }
+        finish(ensureSelfRankRow(rows), 'cloud')
+      },
+      fail(error) {
+        console.warn('[WXCloudProgressSync] getRankList fail:', error, 'source:', source)
+        finish(buildLocalRankFallback('call-fail'), 'call-fail')
+      },
+    })
+  } catch (error) {
+    console.warn('[WXCloudProgressSync] getRankList exception:', error, 'source:', source)
+    finish(buildLocalRankFallback('exception'), 'exception')
+  }
 }
 
 function loadProfileFromCloud(force) {
@@ -404,9 +542,17 @@ function loadProfileFromCloud(force) {
       const cloudProfile = parseProfile(result && result.profile)
       const localProfile = getLocalProfile()
       const cloudProgress = cloudProfile ? parseInt(cloudProfile.progress || 0, 10) : 0
-      const localProgress = localProfile ? parseInt(localProfile.progress || 0, 10) : 0
+      const progressCache = getLocalProgress()
+      const profileProgress = localProfile ? parseInt(localProfile.progress || 0, 10) : 0
+      const localProgress = Math.max(progressCache, profileProgress)
 
-      if (localProgress > cloudProgress && result && result.ok !== false) {
+      if (localProgress > cloudProgress && result && result.ok !== false && localProfile) {
+        // 本地领先：先把本地进度写进 profile 并补齐 levels，再上报，
+        // 否则空的 levels 会被原样写回云端，形成"越同步越空"的死循环。
+        localProfile.progress = localProgress
+        healProfileByProgress(localProfile)
+        writeLocalProfile(localProfile)
+        notifyUnityProfile(localProfile, 'local-ahead-optimistic')
         saveProfileToCloud(localProfile, 'local-ahead')
         return
       }
@@ -648,7 +794,14 @@ function startupRestore(source) {
 
   const localProfile = getLocalProfile()
   if (localProfile) {
+    // 本地 profile 的 progress 可能落后于 game_progress_local（进度走文件通道），
+    // 取两者较大值再推，确保自愈能补全到真实解锁关卡。
+    const profileProgress = parseInt(localProfile.progress || 0, 10)
+    if (localProgress > profileProgress) localProfile.progress = localProgress
     notifyUnityProfile(localProfile, 'startup-local-' + source)
+  } else if (localProgress > 0) {
+    // 完全没有 profile 缓存时，用进度构造一份最小档案，避免 levels 全空。
+    notifyUnityProfile({ progress: localProgress, levels: {} }, 'startup-local-progress-' + source)
   }
 
   restoreProgressFromCloud(true)

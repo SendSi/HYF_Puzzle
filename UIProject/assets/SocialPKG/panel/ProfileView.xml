@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="1334,750" initName="frame">
   <displayList>
-    <graph id="s60_soc1" name="bg" xy="0,0" size="1334,750" type="rect" lineSize="0" fillColor="#ff101a2e" touchable="false"/>
-    <graph id="s61_soc1" name="panel" xy="267,90" size="800,560" type="rect" lineSize="0" fillColor="#ff1b2a45" corner="16" touchable="false"/>
+    <graph id="s60_soc1" name="bg" xy="0,0" size="1334,750" type="rect" lineSize="0" fillColor="#ff101a2e" touchable="false">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="s61_soc1" name="panel" xy="267,90" size="800,560" type="rect" lineSize="0" fillColor="#ff1b2a45" corner="16" touchable="false">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </graph>
     <text id="s62_soc1" name="titleText" xy="367,120" size="600,50" fontSize="34" color="#ffffd447" align="center" vAlign="middle" autoSize="none" text="个人中心"/>
     <text id="s63_soc1" name="statsText" xy="367,200" size="600,200" fontSize="24" color="#ffffffff" align="center" vAlign="top" autoSize="none" text=""/>
     <component id="s64_soc1" name="rankBtn" src="socbtn01" fileName="components/SocialButton.xml" xy="347,440" size="200,52">

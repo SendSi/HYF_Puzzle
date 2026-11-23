@@ -33,7 +33,13 @@
     "useCompilerModule": true,
     "userConfirmedUseCompilerModuleSwitch": false,
     "packNpmManually": false,
-    "packNpmRelationList": []
+    "packNpmRelationList": [],
+    "compileWorklet": false,
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "useCompilerPlugins": false,
+    "condition": false
   },
   "compileType": "game",
   "libVersion": "latest",
@@ -44,18 +50,19 @@
   "packOptions": {
     "ignore": [
       {
-        "type": "folder",
-        "value": ".plugincache"
+        "value": ".plugincache",
+        "type": "folder"
       },
       {
-        "type": "suffix",
-        "value": ".symbols.unityweb"
+        "value": ".symbols.unityweb",
+        "type": "suffix"
       },
       {
-        "type": "suffix",
-        "value": ".symbols.unityweb.br"
+        "value": ".symbols.unityweb.br",
+        "type": "suffix"
       }
-    ]
+    ],
+    "include": []
   },
   "condition": {
     "search": {
@@ -74,5 +81,7 @@
       "current": -1,
       "list": []
     }
-  }
+  },
+  "isGameTourist": false,
+  "editorSetting": {}
 }

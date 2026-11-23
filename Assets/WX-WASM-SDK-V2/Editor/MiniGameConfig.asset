@@ -15,12 +15,12 @@ MonoBehaviour:
   ProjectConf:
     projectName: HYF_Puzzle
     Appid: wx942c99aa4a84533d
-    CDN: http://192.168.26.129/CDN/WebGL
+    CDN: http://192.168.26.129:809/CDN/WebGL
     assetLoadType: 1
     compressDataPackage: 0
     VideoUrl: 
-    relativeDST: D:\GitHub_Project\HYF_Puzzle_H5
-    DST: D:\GitHub_Project\HYF_Puzzle_H5
+    relativeDST: D:\GitHub_Project\HYF_Puzzle\HYF_Puzzle_H5
+    DST: D:\GitHub_Project\HYF_Puzzle\HYF_Puzzle_H5
     StreamCDN: 
     bundleHashLength: 32
     bundlePathIdentifier: yoo;

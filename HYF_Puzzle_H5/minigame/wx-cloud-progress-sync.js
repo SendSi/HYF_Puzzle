@@ -20,6 +20,40 @@ let profileRestoredOnce = false
 let profileSaving = false
 let pendingProfile = null
 let suppressProfileSync = false
+// 提示增减串行队列：避免连续用提示时云函数并发 read-modify-write 互相覆盖
+let hintQueue = Promise.resolve()
+
+// SendMessage 在微信小游戏里不是全局变量，需要从 Unity 模块/管理器上取。
+// 直接 typeof SendMessage 判断会永远为 false，导致所有回调静默丢失。
+function getUnitySendMessage() {
+  try {
+    if (typeof SendMessage === 'function') return SendMessage
+    if (typeof GameGlobal !== 'undefined') {
+      if (GameGlobal.Module && typeof GameGlobal.Module.SendMessage === 'function') return GameGlobal.Module.SendMessage
+      if (GameGlobal.manager && typeof GameGlobal.manager.SendMessage === 'function') return GameGlobal.manager.SendMessage
+      if (GameGlobal.unityInstance && typeof GameGlobal.unityInstance.SendMessage === 'function') return GameGlobal.unityInstance.SendMessage
+    }
+  } catch (error) {
+    console.warn('[WXCloudProgressSync] resolve SendMessage failed:', error)
+  }
+  return null
+}
+
+function sendToUnity(gameObject, method, param) {
+  const send = getUnitySendMessage()
+  if (!send) {
+    console.warn('[WXCloudProgressSync] SendMessage unavailable for ' + method)
+    return false
+  }
+  try {
+    if (param === undefined) send(gameObject, method)
+    else send(gameObject, method, param)
+    return true
+  } catch (error) {
+    console.warn('[WXCloudProgressSync] sendToUnity ' + method + ' failed:', error)
+    return false
+  }
+}
 
 function initCloud() {
   if (cloudReady) return true
@@ -77,13 +111,8 @@ function notifyUnityProgress(progress, source) {
   if (progress <= 0) return
 
   const notify = function () {
-    try {
-      if (typeof SendMessage === 'function') {
-        SendMessage('WXCloudStorageCallbackObj', 'OnLocalLoaded', String(progress))
-        console.log('[WXCloudProgressSync] notified unity:', progress, 'source:', source)
-      }
-    } catch (error) {
-      console.warn('[WXCloudProgressSync] notify unity failed:', error, 'source:', source)
+    if (sendToUnity('WXCloudStorageCallbackObj', 'OnLocalLoaded', String(progress))) {
+      console.log('[WXCloudProgressSync] notified unity:', progress, 'source:', source)
     }
   }
 
@@ -96,13 +125,8 @@ function notifyUnityCloudIntValue(value, source) {
   value = parseCloudIntValue(value)
 
   const notify = function () {
-    try {
-      if (typeof SendMessage === 'function') {
-        SendMessage('WXCloudStorageCallbackObj', 'OnCloudIntValueLocalLoaded', String(value))
-        console.log('[WXCloudProgressSync] notified unity cloud int:', value, 'source:', source)
-      }
-    } catch (error) {
-      console.warn('[WXCloudProgressSync] notify unity cloud int failed:', error, 'source:', source)
+    if (sendToUnity('WXCloudStorageCallbackObj', 'OnCloudIntValueLocalLoaded', String(value))) {
+      console.log('[WXCloudProgressSync] notified unity cloud int:', value, 'source:', source)
     }
   }
 
@@ -146,13 +170,10 @@ function notifyUnityProfile(profile, source) {
   if (!profile) return
   const json = JSON.stringify(profile)
   const notify = function () {
-    try {
-      if (typeof SendMessage === 'function') {
-        SendMessage('WXCloudStorageCallbackObj', 'OnProfileLoaded', json)
-        console.log('[WXCloudProgressSync] notified unity profile:', source)
-      }
-    } catch (error) {
-      console.warn('[WXCloudProgressSync] notify unity profile failed:', error, 'source:', source)
+    if (sendToUnity('WXCloudStorageCallbackObj', 'OnProfileLoaded', json)) {
+      console.log('[WXCloudProgressSync] notified unity profile:', source)
+    } else {
+      console.warn('[WXCloudProgressSync] notify unity profile SKIPPED, source:', source)
     }
   }
   notify()
@@ -167,6 +188,7 @@ function handleProfileResult(result, source, fallbackProfile) {
 
   const profile = parseProfile(result.profile) || fallbackProfile
   if (!profile) return false
+  console.log('[WXCloudProgressSync] profile loaded:', JSON.stringify({ source: source, hints: profile.hints, hintReward: result.hintReward }))
   writeLocalProfile(profile)
   notifyUnityProfile(profile, source)
   return true
@@ -226,14 +248,71 @@ function reportLevelClearToCloud(payload, source) {
   })
 }
 
+// 兼容历史云函数版本返回的字段：signIn -> signed，code:0 -> ok:true
+function normalizeSignInResult(result) {
+  if (!result || typeof result !== 'object') return result
+  const normalized = Object.assign({}, result)
+  const profile = parseProfile(normalized.profile)
+  if (profile) {
+    const daily = profile.daily && typeof profile.daily === 'object'
+      ? Object.assign({}, profile.daily)
+      : {}
+    if (typeof daily.signed !== 'boolean' && typeof daily.signIn === 'boolean') {
+      daily.signed = daily.signIn
+    }
+    profile.daily = daily
+    normalized.profile = profile
+  }
+  if (normalized.ok === undefined && normalized.code === 0) normalized.ok = true
+  if (normalized.hintReward === undefined && profile && profile.daily) {
+    normalized.hintReward = parseInt(profile.daily.hintReward || 0, 10)
+  }
+  return normalized
+}
+
+function showSignInToast(hintReward, source) {
+  const amount = parseInt(hintReward || 0, 10)
+  if (amount <= 0) return
+  try {
+    if (typeof wx !== 'undefined' && typeof wx.showToast === 'function') {
+      wx.showToast({
+        title: '签到成功 +' + amount + ' 提示',
+        icon: 'none',
+        duration: 2500,
+      })
+      console.log('[WXCloudProgressSync] sign-in toast shown:', amount, 'source:', source)
+    }
+  } catch (error) {
+    console.warn('[WXCloudProgressSync] sign-in toast failed:', error)
+  }
+}
+
 function dailySignInToCloud(source) {
   if (!initCloud()) return
 
+  console.log('[WXCloudProgressSync] dailySignIn request: ' + source)
   wx.cloud.callFunction({
     name: CLOUD_FUNCTION_NAME,
     data: { action: 'dailySignIn' },
     success(res) {
-      handleProfileResult(res && res.result, 'daily-sign-in-' + source, null)
+      const raw = res && res.result
+      console.log('[WXCloudProgressSync] dailySignIn raw:', JSON.stringify(raw))
+      const result = normalizeSignInResult(raw)
+      handleProfileResult(result, 'daily-sign-in-' + source, null)
+
+      const hintReward = result ? parseInt(result.hintReward || 0, 10) : 0
+      const signedToday = result ? result.signedToday === true : false
+      let toastDate = ''
+      try { toastDate = wx.getStorageSync('hyf_sign_toast_date') || '' } catch (error) { toastDate = '' }
+      const today = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      if (!signedToday && hintReward > 0 && toastDate !== today) {
+        showSignInToast(hintReward, source)
+        try { wx.setStorageSync('hyf_sign_toast_date', today) } catch (error) { /* ignore */ }
+      }
+      // 再拉一次档案，确保 C# 侧提示数量刷新
+      setTimeout(function refreshProfileAfterSignIn() {
+        loadProfileFromCloud(true)
+      }, 400)
     },
     fail(error) {
       console.warn('[WXCloudProgressSync] dailySignIn fail:', error, 'source:', source)
@@ -245,15 +324,41 @@ function changeHintsToCloud(delta, source) {
   const amount = parseInt(delta || 0, 10)
   if (!amount || !initCloud()) return
 
-  wx.cloud.callFunction({
-    name: CLOUD_FUNCTION_NAME,
-    data: amount > 0 ? { action: 'addHint', amount } : { action: 'useHint' },
-    success(res) {
-      handleProfileResult(res && res.result, 'change-hints-' + source, null)
-    },
-    fail(error) {
-      console.warn('[WXCloudProgressSync] change hints fail:', error, 'source:', source)
-    },
+  console.log('[WXCloudProgressSync] changeHints request:', amount, 'source:', source)
+
+  // 乐观更新：先本地扣/加并立即通知 Unity，UI 不用等云函数回包
+  const localProfile = getLocalProfile()
+  if (localProfile) {
+    const beforeHints = parseInt(localProfile.hints || 0, 10)
+    localProfile.hints = Math.max(0, beforeHints + amount)
+    writeLocalProfile(localProfile)
+    notifyUnityProfile(localProfile, 'hint-optimistic-' + source)
+    console.log('[WXCloudProgressSync] hint optimistic:', beforeHints, '->', localProfile.hints)
+  }
+
+  // 串行执行云端扣减，保证连续用提示不会并发覆盖
+  hintQueue = hintQueue.then(function () {
+    return new Promise(function (resolve) {
+      wx.cloud.callFunction({
+        name: CLOUD_FUNCTION_NAME,
+        data: amount > 0 ? { action: 'addHint', amount } : { action: 'useHint' },
+        success(res) {
+          const result = res && res.result
+          console.log('[WXCloudProgressSync] changeHints result:', JSON.stringify(result), 'delta:', amount)
+          // 用云端权威结果覆盖；失败则用本地乐观值兜底，不让 UI 回跳
+          if (!handleProfileResult(result, 'change-hints-' + source, null) && localProfile) {
+            notifyUnityProfile(localProfile, 'hint-fallback-' + source)
+          }
+        },
+        fail(error) {
+          console.warn('[WXCloudProgressSync] change hints fail:', error, 'source:', source)
+          if (localProfile) notifyUnityProfile(localProfile, 'hint-fail-fallback-' + source)
+        },
+        complete() {
+          resolve()
+        },
+      })
+    })
   })
 }
 
@@ -269,13 +374,8 @@ function loadRankListToCloud(source) {
         console.warn('[WXCloudProgressSync] getRankList failed:', result && result.warning, 'source:', source)
         return
       }
-      try {
-        if (typeof SendMessage === 'function') {
-          SendMessage('WXCloudStorageCallbackObj', 'OnRankListLoaded', JSON.stringify(result.list))
-          console.log('[WXCloudProgressSync] notified unity rank list:', source)
-        }
-      } catch (error) {
-        console.warn('[WXCloudProgressSync] notify rank list failed:', error)
+      if (sendToUnity('WXCloudStorageCallbackObj', 'OnRankListLoaded', JSON.stringify(result.list))) {
+        console.log('[WXCloudProgressSync] notified unity rank list:', source)
       }
     },
     fail(error) {

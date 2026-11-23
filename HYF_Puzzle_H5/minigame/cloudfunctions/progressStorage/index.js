@@ -135,11 +135,46 @@ async function readProfileDoc(userId) {
   return res && res.data && res.data.length > 0 ? res.data[0] : null
 }
 
+let profileCollectionReady = false
+
+async function ensureProfileCollection() {
+  if (profileCollectionReady) return
+  try {
+    await cloud.database().collection(PROFILE_COLLECTION).limit(1).get()
+    profileCollectionReady = true
+  } catch (error) {
+    const code = String(error && (error.errCode || error.code || ''))
+    const msg = String((error && error.errMsg) || error || '')
+    const notExist = code.indexOf('502005') >= 0 || code.indexOf('-502005') >= 0 ||
+      msg.indexOf('COLLECTION_NOT_EXIST') >= 0 || msg.indexOf('collection not exists') >= 0 ||
+      msg.indexOf('not exist') >= 0
+    if (notExist) {
+      try {
+        await cloud.database().createCollection(PROFILE_COLLECTION)
+      } catch (createError) {
+        const cm = String((createError && createError.errMsg) || createError || '')
+        if (cm.indexOf('already exists') < 0 && cm.indexOf('exist') < 0) throw createError
+      }
+      profileCollectionReady = true
+    } else {
+      throw error
+    }
+  }
+}
+
 async function writeProfileDoc(userId, profile, context = {}) {
   const db = cloud.database()
   const clean = normalizeProfile(profile, userId, context)
   const stored = { ...clean, updatedAt: Date.now() }
-  const existing = await readProfileDoc(userId)
+  await ensureProfileCollection()
+  let existing = null
+  try {
+    existing = await readProfileDoc(userId)
+  } catch (readError) {
+    const code = String(readError && (readError.errCode || readError.code || ''))
+    const msg = String((readError && readError.errMsg) || readError || '')
+    if (code.indexOf('502005') < 0 && msg.indexOf('not exist') < 0) throw readError
+  }
 
   if (existing) {
     const data = { ...stored }
@@ -308,7 +343,8 @@ async function dailySignIn(userId, env, context) {
   const profile = loaded.profile
   const today = getChinaDate()
   const daily = profile.daily && typeof profile.daily === 'object' ? { ...profile.daily } : {}
-  const signedToday = daily.date === today && daily.signed === true
+  // 兼容历史版本写入的 signIn 字段，避免同一天重复发放奖励
+  const signedToday = daily.date === today && (daily.signed === true || daily.signIn === true)
   let reward = 0
   let hintReward = 0
 
@@ -484,7 +520,11 @@ function mergeProfile(base, incoming, userId, context) {
   profile.progress = Math.max(profile.progress, clampInt(incoming.progress, 0, MAX_LEVEL))
   profile.cloudIntValue = Math.max(profile.cloudIntValue, clampInt(incoming.cloudIntValue, 0, 1000000000))
   profile.coins = Math.max(profile.coins, clampInt(incoming.coins, 0, 1000000000))
-  profile.hints = Math.max(profile.hints, clampInt(incoming.hints, 0, 999))
+  // hints 是可消耗的道具，必须允许减少。仅在 incoming 明确带 hints 时采用传入值，
+  // 否则保持云端值，避免本地旧缓存（如 11）把已消耗的提示数拉回。
+  if (hasOwn(incoming, 'hints')) {
+    profile.hints = clampInt(incoming.hints, 0, 999)
+  }
 
   if (incoming.levels && typeof incoming.levels === 'object' && !Array.isArray(incoming.levels)) {
     Object.keys(incoming.levels).forEach((levelId) => {

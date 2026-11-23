@@ -23,13 +23,13 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<CfgLubanMgr.<InitAsync>d__3>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<CfgLubanMgr.<PreloadAllConfigFiles>d__4>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<HotFixReflex.<InitAsync>d__1>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Login.LoginMainView.<CheckNextLv>d__5,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Login.LoginMainView.<CheckNextLv>d__8,byte>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<ResMgr.<LoadAssetAsync>d__0<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<ResMgr.<_LoadAssetAsync>d__1<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<CfgLubanMgr.<InitAsync>d__3>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<CfgLubanMgr.<PreloadAllConfigFiles>d__4>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<HotFixReflex.<InitAsync>d__1>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Login.LoginMainView.<CheckNextLv>d__5,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Login.LoginMainView.<CheckNextLv>d__8,byte>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<ResMgr.<LoadAssetAsync>d__0<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<ResMgr.<_LoadAssetAsync>d__1<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>
@@ -384,13 +384,13 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,CfgLubanMgr.<InitAsync>d__3>(Cysharp.Threading.Tasks.UniTask.Awaiter&,CfgLubanMgr.<InitAsync>d__3&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,CfgLubanMgr.<PreloadAllConfigFiles>d__4>(Cysharp.Threading.Tasks.UniTask.Awaiter&,CfgLubanMgr.<PreloadAllConfigFiles>d__4&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,HotFixReflex.<InitAsync>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter&,HotFixReflex.<InitAsync>d__1&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Login.LoginMainView.<CheckNextLv>d__5>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Login.LoginMainView.<CheckNextLv>d__5&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Login.LoginMainView.<CheckNextLv>d__8>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Login.LoginMainView.<CheckNextLv>d__8&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,ResMgr.<_LoadAssetAsync>d__1<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter&,ResMgr.<_LoadAssetAsync>d__1<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,ResMgr.<LoadAssetAsync>d__0<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,ResMgr.<LoadAssetAsync>d__0<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<CfgLubanMgr.<InitAsync>d__3>(CfgLubanMgr.<InitAsync>d__3&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<CfgLubanMgr.<PreloadAllConfigFiles>d__4>(CfgLubanMgr.<PreloadAllConfigFiles>d__4&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<HotFixReflex.<InitAsync>d__1>(HotFixReflex.<InitAsync>d__1&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<Login.LoginMainView.<CheckNextLv>d__5>(Login.LoginMainView.<CheckNextLv>d__5&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<Login.LoginMainView.<CheckNextLv>d__8>(Login.LoginMainView.<CheckNextLv>d__8&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<SceneBase.<Init>d__1>(SceneBase.<Init>d__1&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<ResMgr.<LoadAssetAsync>d__0<object>>(ResMgr.<LoadAssetAsync>d__0<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<ResMgr.<_LoadAssetAsync>d__1<object>>(ResMgr.<_LoadAssetAsync>d__1<object>&)

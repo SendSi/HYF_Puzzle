@@ -65,6 +65,7 @@
   </assembly>
   <assembly fullname="Newtonsoft.Json">
     <type fullname="Newtonsoft.Json.JsonConvert" preserve="all" />
+    <type fullname="Newtonsoft.Json.Linq.JArray" preserve="all" />
     <type fullname="Newtonsoft.Json.Linq.JObject" preserve="all" />
     <type fullname="Newtonsoft.Json.Linq.JToken" preserve="all" />
   </assembly>

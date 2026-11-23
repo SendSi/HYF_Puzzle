@@ -31,7 +31,7 @@ import TCPSocket from './TCPSocket/index';
 import UDPSocket from './UDPSocket/index';
 import bluetooth from './bluetooth/index';
 import gyroscope from './gyroscope/index';
-const unityVersion = '2022.3.15f1c1';
+const unityVersion = '2022.3.62f3';
 GameGlobal.unityNamespace = GameGlobal.unityNamespace || {};
 GameGlobal.unityNamespace.unityVersion = unityVersion;
 window._ScaleRate = 1;

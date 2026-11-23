@@ -76,6 +76,11 @@ namespace SocialPKG
 
         public void SetData()
         {
+            if (mTipText != null)
+                mTipText.SetXY((width - mTipText.width) * 0.5f, mTipText.y);
+            if (mRankList != null)
+                mRankList.SetXY((width - mRankList.width) * 0.5f, mRankList.y);
+
             mTipText.text = "排行榜加载中...";
             mRankList.RemoveChildren();
             WXCloudStorageManager.Instance.LoadRankList();
@@ -144,6 +149,9 @@ namespace SocialPKG
 
         public void SetData()
         {
+            if (mAchieveList != null)
+                mAchieveList.SetXY((width - mAchieveList.width) * 0.5f, mAchieveList.y);
+
             Refresh();
         }
 
@@ -211,6 +219,7 @@ namespace SocialPKG
 
     public partial class ProfileView : GComponent
     {
+        private GGraph mPanel;
         private GTextField mStatsText;
         private GButton mRankBtn;
         private GButton mAchieveBtn;
@@ -220,6 +229,7 @@ namespace SocialPKG
         public override void OnInit()
         {
             base.OnInit();
+            mPanel = GetChild("panel").asGraph;
             mStatsText = GetChild("statsText").asTextField;
             mRankBtn = GetChild("rankBtn").asButton;
             mAchieveBtn = GetChild("achieveBtn").asButton;
@@ -236,6 +246,15 @@ namespace SocialPKG
 
         public void SetData()
         {
+            if (mPanel != null)
+            {
+                float dx = (mPanel.x + mPanel.width * 0.5f) - 667f;
+                mRankBtn.x += dx;
+                mAchieveBtn.x += dx;
+                mSignBtn.x += dx;
+                mCloseBtn.x += dx;
+            }
+
             Refresh();
         }
 

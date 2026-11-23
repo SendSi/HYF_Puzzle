@@ -78,9 +78,9 @@ checkVersion().then((enable) => {
                 /**
                  * !!注意：修改设计宽高和缩放模式后，需要修改文字和进度条样式。默认设计尺寸为667*375
                  */
-                designWidth: 0,
-                designHeight: 0,
-                scaleMode: scaleMode.default,
+                designWidth: 1334,
+                designHeight: 750,
+                scaleMode: scaleMode.noBorder,
                 // 以下配置的样式，尺寸相对设计宽高
                 textConfig: {
                     firstStartText: '首次加载请耐心等待',

@@ -12,14 +12,14 @@
       <relation target="" sidePair="left-left"/>
     </component>
     <text id="n3_lvfl" name="titleText" xy="340,22" size="700,44" fontSize="30" color="#ffffffff" align="center" vAlign="middle" autoSize="none" text="选择关卡">
-      <relation target="" sidePair="width-width"/>
+      <relation target="" sidePair="center-center"/>
     </text>
-    <component id="n4_lvfl" name="signBtn" src="btn0lv01" fileName="components/LevelFlowButton.xml" xy="170,18" size="150,52">
+    <component id="n4_lvfl" name="signBtn" src="btn0lv01" fileName="components/LevelFlowButton.xml" xy="90,18" size="150,52">
       <Button title="每日签到"/>
       <relation target="" sidePair="right-right"/>
     </component>
     <component id="n5_lvfl" name="levelGrid" src="grid0lv01" fileName="components/LevelGrid.xml" xy="77,120" size="1180,600">
-      <relation target="" sidePair="width-width,height-height"/>
+      <relation target="" sidePair="center-center"/>
     </component>
   </displayList>
 </component>

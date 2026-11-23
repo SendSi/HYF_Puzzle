@@ -56,6 +56,12 @@ namespace LevelFlowPKG
 
         public void SetData()
         {
+            // MatchHeight 下宽屏手机逻辑宽度会大于 1334，按实际宽度居中内容。
+            if (mTitleText != null)
+                mTitleText.SetXY((width - mTitleText.width) * 0.5f, mTitleText.y);
+            if (mLevelGrid != null)
+                mLevelGrid.SetXY((width - mLevelGrid.width) * 0.5f, mLevelGrid.y);
+
             Refresh();
         }
 

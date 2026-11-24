@@ -108,6 +108,25 @@ function createDefaultProfile(userId, context = {}) {
   }
 }
 
+function normalizeDaily(rawDaily) {
+  const daily = rawDaily && typeof rawDaily === 'object' && !Array.isArray(rawDaily)
+    ? Object.assign({}, rawDaily)
+    : {}
+
+  // 兼容历史版本：旧云函数写入的是 signIn，客户端 C# 只认 signed。
+  // 不归一化的话 C# 永远认为"今天没签过"，点签到后云端判定已签到而静默返回，
+  // 表现就是"点签到没反应"。
+  if (typeof daily.signed !== 'boolean') {
+    daily.signed = daily.signIn === true
+  }
+
+  daily.date = typeof daily.date === 'string' ? daily.date : ''
+  daily.streak = clampInt(daily.streak, 0, 365)
+  daily.reward = clampInt(daily.reward, 0, 1000)
+  daily.hintReward = clampInt(daily.hintReward, 0, 999)
+  return daily
+}
+
 function normalizeProfile(raw, userId, context = {}) {
   const base = createDefaultProfile(userId, context)
   if (!raw || typeof raw !== 'object') return base
@@ -123,7 +142,7 @@ function normalizeProfile(raw, userId, context = {}) {
     cloudIntValue: clampInt(raw.cloudIntValue, 0, 1000000000),
     coins: clampInt(raw.coins, 0, 1000000000),
     hints: hasOwn(raw, 'hints') ? clampInt(raw.hints, 0, 999) : base.hints,
-    daily: raw.daily && typeof raw.daily === 'object' && !Array.isArray(raw.daily) ? raw.daily : {},
+    daily: normalizeDaily(raw.daily),
     settings: raw.settings && typeof raw.settings === 'object' && !Array.isArray(raw.settings) ? raw.settings : {},
     version: clampInt(raw.version, 1, 1000000) || 1,
   }

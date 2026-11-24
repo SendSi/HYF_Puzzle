@@ -17,6 +17,8 @@ let restoredOnce = false
 let cloudIntRestoredOnce = false
 let profileLoading = false
 let profileRestoredOnce = false
+let lastProfileLoadAt = 0
+let profileLoadRetry = 0
 let profileSaving = false
 let pendingProfile = null
 let suppressProfileSync = false
@@ -25,13 +27,65 @@ let hintQueue = Promise.resolve()
 
 // SendMessage 在微信小游戏里不是全局变量，需要从 Unity 模块/管理器上取。
 // 直接 typeof SendMessage 判断会永远为 false，导致所有回调静默丢失。
+let resolvedSendChannel = ''
+
+// Unity 是否已经"活过来"：SendMessage 在 GameObject 还没创建时不会报错，
+// 所以只能靠 Unity 主动调用桥接函数来判定。启动阶段（0~6s）推送的消息
+// 在真机上经常全丢，就是这个原因。
+let unityAlive = false
+
+function markUnityAlive(reason) {
+  if (unityAlive) return
+  unityAlive = true
+  console.log('[WXCloudProgressSync] unity bridge alive:', reason, '| channel:', resolvedSendChannel || 'none')
+}
+
 function getUnitySendMessage() {
   try {
-    if (typeof SendMessage === 'function') return SendMessage
-    if (typeof GameGlobal !== 'undefined') {
-      if (GameGlobal.Module && typeof GameGlobal.Module.SendMessage === 'function') return GameGlobal.Module.SendMessage
-      if (GameGlobal.manager && typeof GameGlobal.manager.SendMessage === 'function') return GameGlobal.manager.SendMessage
-      if (GameGlobal.unityInstance && typeof GameGlobal.unityInstance.SendMessage === 'function') return GameGlobal.unityInstance.SendMessage
+    const g = typeof GameGlobal !== 'undefined' ? GameGlobal : null
+    const ns = g && g.unityNamespace ? g.unityNamespace : null
+
+    // 新版 Unity WebGL(微信) SDK：Unity 模块挂在 unityNamespace.UnityModule 上
+    // （导出产物 webgl.wasm.framework.unityweb.js 里只有
+    //   GameGlobal.unityNamespace.UnityModule = unityFramework，
+    //   并没有 GameGlobal.Module，找错位置会导致所有回调静默丢弃）
+    if (ns && ns.UnityModule && typeof ns.UnityModule.SendMessage === 'function') {
+      if (resolvedSendChannel !== 'unityNamespace.UnityModule') {
+        resolvedSendChannel = 'unityNamespace.UnityModule'
+        console.log('[WXCloudProgressSync] SendMessage channel:', resolvedSendChannel)
+      }
+      return ns.UnityModule.SendMessage
+    }
+
+    if (g) {
+      // 老版 SDK 的挂载方式，保留兼容
+      if (g.Module && typeof g.Module.SendMessage === 'function') {
+        if (resolvedSendChannel !== 'GameGlobal.Module') {
+          resolvedSendChannel = 'GameGlobal.Module'
+          console.log('[WXCloudProgressSync] SendMessage channel:', resolvedSendChannel)
+        }
+        return g.Module.SendMessage
+      }
+      if (ns && ns.Module && typeof ns.Module.SendMessage === 'function') {
+        if (resolvedSendChannel !== 'unityNamespace.Module') {
+          resolvedSendChannel = 'unityNamespace.Module'
+          console.log('[WXCloudProgressSync] SendMessage channel:', resolvedSendChannel)
+        }
+        return ns.Module.SendMessage
+      }
+      if (g.manager && typeof g.manager.SendMessage === 'function') {
+        resolvedSendChannel = 'GameGlobal.manager'
+        return g.manager.SendMessage
+      }
+      if (g.unityInstance && typeof g.unityInstance.SendMessage === 'function') {
+        resolvedSendChannel = 'GameGlobal.unityInstance'
+        return g.unityInstance.SendMessage
+      }
+    }
+
+    if (typeof SendMessage === 'function') {
+      resolvedSendChannel = 'global.SendMessage'
+      return SendMessage
     }
   } catch (error) {
     console.warn('[WXCloudProgressSync] resolve SendMessage failed:', error)
@@ -39,10 +93,24 @@ function getUnitySendMessage() {
   return null
 }
 
+let reportedChannelMissing = false
+let cloudFailReported = false
+
 function sendToUnity(gameObject, method, param) {
   const send = getUnitySendMessage()
   if (!send) {
-    console.warn('[WXCloudProgressSync] SendMessage unavailable for ' + method)
+    if (!reportedChannelMissing) {
+      reportedChannelMissing = true
+      let keys = ''
+      try {
+        const g = typeof GameGlobal !== 'undefined' ? GameGlobal : null
+        const ns = g && g.unityNamespace ? g.unityNamespace : null
+        keys = 'GameGlobal=' + !!g + ' unityNamespace=' + !!ns +
+          ' nsKeys=' + (ns ? Object.keys(ns).join(',') : '-') +
+          ' hasModule=' + !!(g && g.Module)
+      } catch (error) { keys = 'inspect failed: ' + error }
+      console.warn('[WXCloudProgressSync] SendMessage unavailable for ' + method + ' | ' + keys)
+    }
     return false
   }
   try {
@@ -55,17 +123,67 @@ function sendToUnity(gameObject, method, param) {
   }
 }
 
+// 把本地缓存的档案投递给 Unity（带进度对齐 + 自愈补关）。
+function deliverCachedProfile(tag) {
+  const localProfile = getLocalProfile()
+  if (!localProfile) return false
+  const localProgress = getLocalProgress()
+  const profileProgress = parseInt(localProfile.progress || 0, 10)
+  if (localProgress > profileProgress) localProfile.progress = localProgress
+  notifyUnityProfile(localProfile, tag)
+  return true
+}
+
+// 延迟兜底投递：真机上 Unity 场景 + HybridCLR 热更加载经常要 8s 以上，
+// 启动早期的 push 全部丢失；这里在更晚的时间点重投缓存档案。
+// 一旦 Unity 主动请求过档案（unityAlive），就停手，交给云端强制刷新，
+// 避免旧缓存把新数据盖回去。
+const PROFILE_REDELIVERY_MS = [8000, 12000, 18000, 25000, 35000, 50000, 70000]
+PROFILE_REDELIVERY_MS.forEach(function (delay) {
+  setTimeout(function redeliverProfile() {
+    if (unityAlive) return
+    if (deliverCachedProfile('late-delivery-' + delay)) {
+      console.log('[WXCloudProgressSync] late profile delivery at', delay, 'ms')
+    }
+  }, delay)
+})
+
+// 必须显式指定环境：不传 env 时会用"默认环境"，
+// 一旦后台没把该环境设为默认，所有 wx.cloud 调用都会报
+// "当前环境 undefined"，表现为 callFunction 直接 fail。
+const CLOUD_ENV = 'cloud1-4g6ek89l1ec65c3f'
+
+let cloudInitError = ''
+
+function getCloudErrorInfo(error) {
+  if (!error) return { code: '', msg: '' }
+  const code = error.errCode !== undefined && error.errCode !== null
+    ? String(error.errCode)
+    : (error.code !== undefined && error.code !== null ? String(error.code) : '')
+  const msg = String(error.errMsg || error.message || error || '')
+  return { code: code, msg: msg }
+}
+
 function initCloud() {
   if (cloudReady) return true
   if (typeof wx === 'undefined' || !wx.cloud || !wx.cloud.init || !wx.cloud.callFunction) {
+    cloudInitError = 'wx.cloud not available'
     console.warn('[WXCloudProgressSync] wx.cloud not available')
     return false
   }
 
-  wx.cloud.init({ traceUser: true })
-  cloudReady = true
-  console.log('[WXCloudProgressSync] cloud initialized')
-  return true
+  try {
+    wx.cloud.init({ env: CLOUD_ENV, traceUser: true })
+    cloudReady = true
+    cloudInitError = ''
+    console.log('[WXCloudProgressSync] cloud initialized, env:', CLOUD_ENV)
+    return true
+  } catch (error) {
+    const info = getCloudErrorInfo(error)
+    cloudInitError = 'init fail code=' + info.code + ' ' + info.msg
+    console.warn('[WXCloudProgressSync] cloud init failed:', info.code, info.msg)
+    return false
+  }
 }
 
 function parseProgress(value) {
@@ -200,15 +318,25 @@ function notifyUnityProfile(rawProfile, source) {
   const profile = healProfileByProgress(rawProfile)
   if (!profile) return
   const json = JSON.stringify(profile)
-  const notify = function () {
+  const levelCount = profile.levels && typeof profile.levels === 'object' ? Object.keys(profile.levels).length : 0
+  const notify = function (tag) {
     if (sendToUnity('WXCloudStorageCallbackObj', 'OnProfileLoaded', json)) {
-      console.log('[WXCloudProgressSync] notified unity profile:', source)
+      console.log('[WXCloudProgressSync] notified unity profile:', source, tag, 'levels:', levelCount)
     } else {
-      console.warn('[WXCloudProgressSync] notify unity profile SKIPPED, source:', source)
+      console.warn('[WXCloudProgressSync] notify unity profile SKIPPED, source:', source, tag)
     }
   }
-  notify()
-  setTimeout(notify, 800)
+
+  notify('immediate')
+  // Unity 侧 GameObject 可能还没创建，早期几次会被静默丢弃，所以补投几次；
+  // 一旦 Unity 主动调用过桥接函数（unityAlive），说明消息已能送达，
+  // 就不再重复投递，避免选关页被重复刷新/重建。
+  ;[800, 2000, 4000].forEach(function (delay) {
+    setTimeout(function retryNotify() {
+      if (unityAlive) return
+      notify('retry-' + delay)
+    }, delay)
+  })
 }
 
 function handleProfileResult(result, source, fallbackProfile) {
@@ -245,6 +373,16 @@ function handleProfileResult(result, source, fallbackProfile) {
   }))
   writeLocalProfile(profile)
   notifyUnityProfile(profile, source)
+
+  // 离线签到过的记录：云端恢复后立即补同步，避免线上档案缺这一天
+  try {
+    const pendingSign = wx.getStorageSync('hyf_pending_sign_sync')
+    if (pendingSign) {
+      wx.removeStorageSync('hyf_pending_sign_sync')
+      setTimeout(function flushPendingSign() { saveProfileToCloud(profile, 'pending-sign-sync') }, 500)
+    }
+  } catch (error) { /* ignore */ }
+
   return true
 }
 
@@ -341,8 +479,75 @@ function showSignInToast(hintReward, source) {
   }
 }
 
+function showToastSafe(title) {
+  try {
+    if (typeof wx !== 'undefined' && typeof wx.showToast === 'function') {
+      wx.showToast({ title: title, icon: 'none', duration: 2500 })
+    }
+  } catch (error) {
+    console.warn('[WXCloudProgressSync] showToast failed:', error)
+  }
+}
+
+function beijingToday() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+// 云端不可用时的离线兜底：本地发放签到奖励，恢复联网后再合并上云，
+// 避免"云挂了 → 按钮完全没反应 → 玩家以为坏了"。
+function localSignInFallback(source, reason) {
+  let profile = getLocalProfile()
+  if (!profile) {
+    profile = { progress: getLocalProgress(), levels: {}, hints: 0, coins: 0, daily: {} }
+  }
+  const today = beijingToday()
+  const daily = profile.daily && typeof profile.daily === 'object' ? profile.daily : {}
+  const signedToday = daily.date === today && (daily.signed === true || daily.signIn === true)
+
+  if (signedToday) {
+    notifyUnityProfile(profile, 'local-sign-already-' + source)
+    showToastSafe('今日已签到，明天再来')
+    return
+  }
+
+  const beforeHints = parseInt(profile.hints || 0, 10)
+  profile.hints = beforeHints + 5
+  profile.coins = parseInt(profile.coins || 0, 10) + 10
+  profile.daily = {
+    date: today,
+    signed: true,
+    signIn: true,
+    streak: parseInt(daily.streak || 0, 10) + 1,
+    reward: 10,
+    hintReward: 5,
+  }
+  if (!profile.progress) profile.progress = getLocalProgress()
+  healProfileByProgress(profile)
+  writeLocalProfile(profile)
+  notifyUnityProfile(profile, 'local-sign-' + source)
+  try { wx.setStorageSync('hyf_pending_sign_sync', today) } catch (error) { /* ignore */ }
+  console.warn('[WXCloudProgressSync] offline sign-in applied:', beforeHints, '->', profile.hints, 'reason:', reason)
+  showToastSafe('签到成功 +5 提示')
+}
+
 function dailySignInToCloud(source) {
-  if (!initCloud()) return
+  if (!initCloud()) {
+    // 云服务不可用时也要有反馈，避免"点了像没反应"
+    showToastSafe('云服务未连接，请稍后重试')
+    try {
+      if (typeof wx !== 'undefined' && typeof wx.showModal === 'function' && cloudInitError) {
+        wx.showModal({
+          title: '云开发未就绪',
+          content: String(cloudInitError).slice(0, 200),
+          showCancel: false,
+          confirmText: '知道了',
+        })
+      }
+    } catch (modalError) {
+      /* ignore */
+    }
+    return
+  }
 
   console.log('[WXCloudProgressSync] dailySignIn request: ' + source)
   wx.cloud.callFunction({
@@ -354,22 +559,56 @@ function dailySignInToCloud(source) {
       const result = normalizeSignInResult(raw)
       handleProfileResult(result, 'daily-sign-in-' + source, null)
 
+      const ok = result ? result.ok !== false : false
+      const signedBefore = !!(result && result.signedToday === true)
       const hintReward = result ? parseInt(result.hintReward || 0, 10) : 0
-      const signedToday = result ? result.signedToday === true : false
-      let toastDate = ''
-      try { toastDate = wx.getStorageSync('hyf_sign_toast_date') || '' } catch (error) { toastDate = '' }
-      const today = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10)
-      if (!signedToday && hintReward > 0 && toastDate !== today) {
-        showSignInToast(hintReward, source)
-        try { wx.setStorageSync('hyf_sign_toast_date', today) } catch (error) { /* ignore */ }
+      console.log('[WXCloudProgressSync] dailySignIn decided:', JSON.stringify({
+        ok: ok,
+        signedToday: signedBefore,
+        hintReward: hintReward,
+      }))
+
+      if (signedBefore) {
+        // 云端判定今天已经签过：必须给提示，否则用户以为按钮坏了
+        showToastSafe('今日已签到，明天再来')
+      } else if (ok && hintReward > 0) {
+        let toastDate = ''
+        try { toastDate = wx.getStorageSync('hyf_sign_toast_date') || '' } catch (error) { toastDate = '' }
+        const today = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10)
+        if (toastDate !== today) {
+          showSignInToast(hintReward, source)
+          try { wx.setStorageSync('hyf_sign_toast_date', today) } catch (error) { /* ignore */ }
+        }
+      } else if (ok) {
+        showToastSafe('签到成功')
+      } else {
+        showToastSafe('签到失败，请稍后重试')
+        console.warn('[WXCloudProgressSync] dailySignIn error:', result && result.error)
       }
+
       // 再拉一次档案，确保 C# 侧提示数量刷新
       setTimeout(function refreshProfileAfterSignIn() {
         loadProfileFromCloud(true)
       }, 400)
     },
     fail(error) {
-      console.warn('[WXCloudProgressSync] dailySignIn fail:', error, 'source:', source)
+      const info = getCloudErrorInfo(error)
+      console.warn('[WXCloudProgressSync] dailySignIn fail:', JSON.stringify(info), 'source:', source)
+      // 调试期把真实错误码露出来，便于定位（网络/环境/配额/超时）
+      try {
+        if (typeof wx !== 'undefined' && typeof wx.showModal === 'function') {
+          wx.showModal({
+            title: '云函数调用失败',
+            content: 'code=' + (info.code || '?') + '\n' + String(info.msg || '').slice(0, 200),
+            showCancel: false,
+            confirmText: '知道了',
+          })
+        }
+      } catch (modalError) {
+        /* ignore */
+      }
+      // 云端失败也要能签到，先本地发放，联网后自动补同步
+      localSignInFallback(source, 'cloud-fail-' + (info.code || info.msg))
     },
   })
 }
@@ -528,12 +767,15 @@ function loadProfileFromCloud(force) {
       setTimeout(function retryForcedProfileRestore() { loadProfileFromCloud(true) }, 800)
     }
     return
-  }
-  if (profileRestoredOnce && !force) return
+  }  // 以前这里用 profileRestoredOnce 永久拦截，导致 Unity 启动晚于 6s 时
+  // 主动请求档案被忽略，选关页只有进度、没有 levels（全显示"需完成"）。
+  // 改成节流：非强制请求 1.5s 内只放行一次。
+  if (!force && profileRestoredOnce && Date.now() - lastProfileLoadAt < 1500) return
   if (!initCloud()) return
 
   profileRestoredOnce = true
   profileLoading = true
+  lastProfileLoadAt = Date.now()
   wx.cloud.callFunction({
     name: CLOUD_FUNCTION_NAME,
     data: { action: 'getProfile' },
@@ -562,9 +804,19 @@ function loadProfileFromCloud(force) {
       }
     },
     fail(error) {
-      console.warn('[WXCloudProgressSync] getProfile fail:', error)
+      const info = getCloudErrorInfo(error)
+      console.warn('[WXCloudProgressSync] getProfile fail:', JSON.stringify(info))
       const localProfile = getLocalProfile()
       if (localProfile) notifyUnityProfile(localProfile, 'profile-local-fallback')
+      // 网络抖动时自动重试，避免这一次失败就再也拿不到星级
+      if (profileLoadRetry < 2) {
+        profileLoadRetry++
+        setTimeout(function retryProfileLoad() { loadProfileFromCloud(true) }, 1500 * profileLoadRetry)
+      }
+      if (!cloudFailReported) {
+        cloudFailReported = true
+        showToastSafe('云存档连接失败(' + (info.code || '?') + ')')
+      }
     },
     complete() {
       profileLoading = false
@@ -815,18 +1067,63 @@ setTimeout(function restoreAtOneSecond() { startupRestore('1s') }, 1000)
 setTimeout(function restoreAtThreeSeconds() { startupRestore('3s') }, 3000)
 setTimeout(function restoreAtSixSeconds() { startupRestore('6s') }, 6000)
 
+// 自检：6 秒后仍拿不到 Unity 通道，说明 SDK 挂载方式又变了，给一次可见提示便于定位
+setTimeout(function checkUnityChannel() {
+  if (getUnitySendMessage()) {
+    console.log('[WXCloudProgressSync] unity channel ok:', resolvedSendChannel)
+    return
+  }
+  console.warn('[WXCloudProgressSync] unity channel still unavailable after 6s')
+  showToastSafe('云同步通道未就绪')
+}, 6000)
+
 if (typeof GameGlobal !== 'undefined') {
-  GameGlobal.__HYFSaveProgressToCloud = syncProgressToCloud
-  GameGlobal.__HYFRestoreProgressFromCloud = function () { restoreProgressFromCloud(false) }
+  // 这些函数只可能被 Unity 调用，所以调用发生即代表 Unity 已经能收消息。
+  GameGlobal.__HYFSaveProgressToCloud = function (progress, source) {
+    markUnityAlive('save-progress')
+    return syncProgressToCloud(progress, source)
+  }
+  GameGlobal.__HYFRestoreProgressFromCloud = function () {
+    markUnityAlive('restore-progress')
+    restoreProgressFromCloud(false)
+  }
   GameGlobal.__HYFSaveCloudIntValueToCloud = syncCloudIntValueToCloud
-  GameGlobal.__HYFRestoreCloudIntValueFromCloud = function () { restoreCloudIntValueFromCloud(false) }
-  GameGlobal.__HYFSaveProfileToCloud = saveProfileToCloud
-  GameGlobal.__HYFLoadProfileFromCloud = function () { loadProfileFromCloud(false) }
-  GameGlobal.__HYFReportLevelClear = reportLevelClearToCloud
-  GameGlobal.__HYFDailySignIn = dailySignInToCloud
-  GameGlobal.__HYFUseHint = function () { changeHintsToCloud(-1, 'wasm') }
-  GameGlobal.__HYFAddHint = function (amount) { changeHintsToCloud(amount, 'wasm') }
-  GameGlobal.__HYFLoadRankList = function () { loadRankListToCloud('wasm') }
+  GameGlobal.__HYFRestoreCloudIntValueFromCloud = function () {
+    markUnityAlive('restore-cloud-int')
+    restoreCloudIntValueFromCloud(false)
+  }
+  GameGlobal.__HYFSaveProfileToCloud = function (json, source) {
+    markUnityAlive('save-profile')
+    return saveProfileToCloud(json, source)
+  }
+  // Unity 主动请求档案时必须真的去云端拉一次（force），
+  // 否则启动早于 Unity 就绪的那次推送丢了以后，选关页永远等不到星级。
+  // 先用本地缓存立刻铺一版（打开列表就能看到星级），再用云端结果覆盖。
+  GameGlobal.__HYFLoadProfileFromCloud = function () {
+    markUnityAlive('load-profile')
+    deliverCachedProfile('on-demand-cache')
+    loadProfileFromCloud(true)
+  }
+  GameGlobal.__HYFReportLevelClear = function (json, source) {
+    markUnityAlive('report-level-clear')
+    return reportLevelClearToCloud(json, source)
+  }
+  GameGlobal.__HYFDailySignIn = function (source) {
+    markUnityAlive('daily-sign-in')
+    return dailySignInToCloud(source)
+  }
+  GameGlobal.__HYFUseHint = function () {
+    markUnityAlive('use-hint')
+    return changeHintsToCloud(-1, 'wasm')
+  }
+  GameGlobal.__HYFAddHint = function (amount) {
+    markUnityAlive('add-hint')
+    return changeHintsToCloud(amount, 'wasm')
+  }
+  GameGlobal.__HYFLoadRankList = function () {
+    markUnityAlive('load-rank-list')
+    return loadRankListToCloud('wasm')
+  }
   console.log('[WXCloudProgressSync] bridge ready')
 } else {
   console.warn('[WXCloudProgressSync] GameGlobal not available')

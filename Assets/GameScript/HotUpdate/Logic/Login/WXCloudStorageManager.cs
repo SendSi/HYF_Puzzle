@@ -74,6 +74,7 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     private const string CLOUD_INT_SYNC_TIME_KEY = "CloudIntValueSyncTime";
     private const string WX_LOCAL_PROGRESS_KEY = "game_progress_local";
     private const string WX_LOCAL_CLOUD_INT_KEY = "cloud_int_value_local";
+    private const string LOCAL_PROFILE_CACHE_KEY = "WXProfileCache";
     private const string WX_CLOUD_ENV_ID = "";
     private const string WX_CLOUD_COLLECTION = "user_game_progress";
 
@@ -119,6 +120,12 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     private Action _rewardedVideoSuccessCallback;
     private Action<string> _rewardedVideoFailCallback;
 
+    // 最近一次向云端请求档案的时间（秒），用于节流
+    private float _lastProfileRefreshAt = -9999f;
+
+    // 档案内容指纹：同一份档案被 JS 重复投递时不必重复刷新 UI
+    private string _profileSignature = "";
+
     protected override void OnInit()
     {
         base.OnInit();
@@ -127,8 +134,12 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         // 启动时先读微信本地缓存；云端恢复由小游戏原生 JS 兜底脚本处理
         LoadProgressFromCloud();
 
+        // 先用本地缓存的档案铺底：选关页/结算页第一帧就有星级，
+        // 不再依赖"云端档案什么时候回来"（真机上 Unity 就绪往往晚于 JS 的启动推送）。
+        LoadCachedProfile();
+
         // 拉取云端结构化档案（选关/结算页的星级、最佳用时等后续从它取）
-        WXCloudStorageNative.LoadProfile();
+        RefreshProfileFromCloud(true);
     }
 
     #region 公共接口
@@ -327,9 +338,66 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
     }
 
     /// <summary>
+    /// 请求刷新云端结构化档案（星级/最佳用时）。
+    /// 打开选关页时调用，保证星级不是"上一次启动时的旧数据"。
+    /// </summary>
+    public void RefreshProfileFromCloud(bool force = false)
+    {
+        if (!force && Time.realtimeSinceStartup - _lastProfileRefreshAt < 3f)
+            return;
+
+        _lastProfileRefreshAt = Time.realtimeSinceStartup;
+        WXCloudStorageNative.LoadProfile();
+        Debuger.Log("[WXCloudStorage] 请求刷新云端档案");
+    }
+
+    /// <summary>
+    /// 用本地缓存的档案 JSON 铺底（不做云端请求）。
+    /// </summary>
+    private void LoadCachedProfile()
+    {
+        string json;
+        try
+        {
+            json = PlayerPrefsHelper.GetString(LOCAL_PROFILE_CACHE_KEY, "");
+        }
+        catch (Exception e)
+        {
+            Debuger.LogWarning($"[WXCloudStorage] 档案缓存读取失败，忽略: {e.Message}");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(json))
+            return;
+
+        // 缓存只是首帧铺底，不触发"签到成功"事件
+        ApplyProfileJson(json, false, "local-cache");
+    }
+
+    private void SaveCachedProfile(string json)
+    {
+        if (string.IsNullOrEmpty(json) || json.Length > 512 * 1024)
+            return;
+
+        try
+        {
+            PlayerPrefsHelper.SetString(LOCAL_PROFILE_CACHE_KEY, json);
+        }
+        catch (Exception e)
+        {
+            Debuger.LogWarning($"[WXCloudStorage] 档案缓存写入失败: {e.Message}");
+        }
+    }
+
+    /// <summary>
     /// JS 回调：云端档案已加载。只合并到本地缓存，不再反向写云，避免回环。
     /// </summary>
     public void OnProfileDataLoaded(string json)
+    {
+        ApplyProfileJson(json, true, "cloud");
+    }
+
+    private void ApplyProfileJson(string json, bool allowDailySignedEvent, string source)
     {
         if (string.IsNullOrEmpty(json))
             return;
@@ -341,7 +409,7 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
         }
         catch (Exception e)
         {
-            Debuger.LogError($"[WXCloudStorage] 档案解析失败: {e.Message}");
+            Debuger.LogError($"[WXCloudStorage] 档案解析失败({source}): {e.Message}");
             return;
         }
 
@@ -414,14 +482,47 @@ public class WXCloudStorageManager : Singleton<WXCloudStorageManager>
             OnCloudIntValueChanged?.Invoke(_currentCloudIntValue);
         }
 
-        if (_profile.dailySigned && !string.IsNullOrEmpty(_profile.dailyDate) && _profile.dailyDate != previousDailyDate)
+        if (allowDailySignedEvent && _profile.dailySigned && !string.IsNullOrEmpty(_profile.dailyDate) && _profile.dailyDate != previousDailyDate)
         {
             OnDailySigned?.Invoke(_profile);
             Debuger.Log($"[WXCloudStorage] 签到成功: +{_profile.dailyReward} 金币，+{_profile.dailyHintReward} 提示，连续 {_profile.dailyStreak} 天");
         }
 
+        string signature = BuildProfileSignature();
+        if (signature == _profileSignature)
+        {
+            Debuger.Log($"[WXCloudStorage] 档案无变化({source})，跳过 UI 刷新");
+            return;
+        }
+        _profileSignature = signature;
+
+        // 只有内容真的变了才落盘，避免重复投递时反复写本地
+        if (source == "cloud")
+        {
+            SaveCachedProfile(json);
+        }
+
         OnProfileUpdated?.Invoke(_profile);
-        Debuger.Log($"[WXCloudStorage] 档案已合并: progress={_profile.progress}, cloudInt={_profile.cloudIntValue}");
+        Debuger.Log($"[WXCloudStorage] 档案已合并({source}): progress={_profile.progress}, cloudInt={_profile.cloudIntValue}, levels={_profile.levels.Count}");
+    }
+
+    private string BuildProfileSignature()
+    {
+        int totalStars = 0;
+        long totalBestTime = 0;
+        foreach (var pair in _profile.levels)
+        {
+            var record = pair.Value;
+            if (record == null)
+                continue;
+
+            totalStars += Mathf.Clamp(record.stars, 0, 3);
+            totalBestTime += Math.Max(0L, record.bestTimeMs);
+        }
+
+        return _profile.progress + "|" + _profile.cloudIntValue + "|" + _profile.coins + "|" +
+               _profile.hints + "|" + _profile.dailyDate + "|" + _profile.dailySigned + "|" +
+               _profile.levels.Count + "|" + totalStars + "|" + totalBestTime;
     }
 
     private void MergeLocalLevelRecord(int level, int stars, long timeMs, int hintsUsed)

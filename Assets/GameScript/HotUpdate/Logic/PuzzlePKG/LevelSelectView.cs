@@ -62,6 +62,10 @@ namespace LevelFlowPKG
             if (mLevelGrid != null)
                 mLevelGrid.SetXY((width - mLevelGrid.width) * 0.5f, mLevelGrid.y);
 
+            // 打开列表时主动刷新一次云端档案：星级不能依赖"启动时那次推送"
+            // （真机上 Unity 就绪常常晚于 JS 的启动推送，那次数据会丢）。
+            WXCloudStorageManager.Instance.RefreshProfileFromCloud();
+
             Refresh();
         }
 
@@ -106,7 +110,9 @@ namespace LevelFlowPKG
                 profile.levels.TryGetValue(cfg.Task.ToString(), out var record);
 
                 bool showThumbnail = cfg.Task <= thumbnailVisibleMax;
-                var card = CreateLevelCard(cfg.Task, isUnlocked, showThumbnail, record, out var thumbLoader);
+                // progress 表示"下一个可玩关卡"，所以严格小于它的关卡已经通关
+                bool isCleared = cfg.Task < unlocked;
+                var card = CreateLevelCard(cfg.Task, isUnlocked, isCleared, showThumbnail, record, out var thumbLoader);
                 card.SetXY((i % Columns) * (CardWidth + GapX), (i / Columns) * (CardHeight + GapY));
                 mLevelGrid.AddChild(card);
                 _cards.Add(card);
@@ -162,7 +168,7 @@ namespace LevelFlowPKG
             }
         }
 
-        private static GComponent CreateLevelCard(int level, bool isUnlocked, bool showThumbnail, WXLevelRecord record, out GLoader thumbLoader)
+        private static GComponent CreateLevelCard(int level, bool isUnlocked, bool isCleared, bool showThumbnail, WXLevelRecord record, out GLoader thumbLoader)
         {
             var card = UIPackage.CreateObject("LevelFlowPKG", "LevelCard").asCom;
             card.SetSize(CardWidth, CardHeight);
@@ -189,7 +195,10 @@ namespace LevelFlowPKG
                 : showThumbnail ? new Color(0.82f, 0.86f, 0.92f, 1f) : new Color(0.60f, 0.62f, 0.68f, 1f);
 
             detailText.text = isUnlocked
-                ? (record == null ? "需完成" : $"{StarsText(record.stars)}  {FormatTime(record.bestTimeMs)}")
+                ? (record == null
+                    // 已通关但星级还没回来：先显示"已通关"，不要误报"需完成"
+                    ? (isCleared ? "已通关" : "需完成")
+                    : $"{StarsText(record.stars)}  {FormatTime(record.bestTimeMs)}")
                 : showThumbnail ? "完成上一关" : "完成上一关解锁";
 
             if (isUnlocked)

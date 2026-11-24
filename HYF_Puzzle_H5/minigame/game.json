@@ -1,5 +1,6 @@
 
 {
+  "cloud" : true,
   "deviceOrientation" : "landscapeRight",
   "iOSHighPerformance" : true,
   "iOSHighPerformance+" : false,

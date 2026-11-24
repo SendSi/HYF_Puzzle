@@ -10,7 +10,7 @@ import checkVersion from './check-version';
 import { launchEventType, scaleMode } from './plugin-config';
 import { preloadWxCommonFont } from './unity-sdk/font/index';
 const managerConfig = {
-    DATA_FILE_MD5: 'd72ac120e8dc6067',
+    DATA_FILE_MD5: 'f594cd3708d49511',
     CODE_FILE_MD5: '8b99df8ed9b5d243',
     GAME_NAME: 'webgl',
     APPID: 'wx942c99aa4a84533d',
@@ -78,9 +78,9 @@ checkVersion().then((enable) => {
                 /**
                  * !!注意：修改设计宽高和缩放模式后，需要修改文字和进度条样式。默认设计尺寸为667*375
                  */
-                designWidth: 1334,
-                designHeight: 750,
-                scaleMode: scaleMode.noBorder,
+                designWidth: 0,
+                designHeight: 0,
+                scaleMode: scaleMode.default,
                 // 以下配置的样式，尺寸相对设计宽高
                 textConfig: {
                     firstStartText: '首次加载请耐心等待',
